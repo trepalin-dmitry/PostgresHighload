@@ -9,24 +9,34 @@ public class TestUtils {
         var threadsCounts = new ArrayList<Integer>();
         threadsCounts.add(1);
 
-        var packageSizes = new ArrayList<Integer>();
-        packageSizes.add(100);
+        var exchangeDealsSizes = new ArrayList<Integer>();
+        exchangeDealsSizes.add(100);
+
+        var exchangeDealsPersonsSizes = new ArrayList<Integer>();
+        exchangeDealsPersonsSizes.add(5);
+
+        var exchangeDealsStatusesSizes = new ArrayList<Integer>();
+        exchangeDealsStatusesSizes.add(5);
 
         var items = new TestItems();
         var index = 1;
         for (Integer threadsCount : threadsCounts) {
-            for (Integer packageSize : packageSizes) {
-                for (TestType type : TestType.values()) {
-                    TestItem item;
-                    //noinspection SwitchStatementWithTooFewBranches
-                    switch (type) {
-                        case HibernateSimple:
-                            item = new HibernateSimpleTestItem(threadsCount, packageSize);
-                            break;
-                        default:
-                            throw new IllegalStateException("Unexpected value: " + type);
+            for (Integer exchangeDealsSize : exchangeDealsSizes) {
+                for (Integer exchangeDealsPersonsSize : exchangeDealsPersonsSizes) {
+                    for (Integer exchangeDealsStatusesSize : exchangeDealsStatusesSizes) {
+                        for (TestType type : TestType.values()) {
+                            TestItem item;
+                            //noinspection SwitchStatementWithTooFewBranches
+                            switch (type) {
+                                case HibernateSimple:
+                                    item = new HibernateSimpleTestItem(threadsCount, exchangeDealsSize, exchangeDealsPersonsSize, exchangeDealsStatusesSize);
+                                    break;
+                                default:
+                                    throw new IllegalStateException("Unexpected value: " + type);
+                            }
+                            items.put(index++, item);
+                        }
                     }
-                    items.put(index++, item);
                 }
             }
         }

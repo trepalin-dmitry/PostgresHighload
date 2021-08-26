@@ -12,6 +12,8 @@ import lombok.experimental.Accessors;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -101,4 +103,8 @@ public class ExchangeDealSource extends AbstractDataObjectWithGuidAndRevision {
      * Дата расчетов (оплаты)
      */
     private LocalDate planPaymentDate;
+
+    private List<ExchangeDealPersonSource> persons = new ArrayList<>();
+
+    private List<ExchangeDealStatusSource> statuses = new ArrayList<>();
 }

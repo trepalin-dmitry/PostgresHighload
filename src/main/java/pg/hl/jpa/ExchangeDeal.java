@@ -1,5 +1,6 @@
 package pg.hl.jpa;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -7,7 +8,11 @@ import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 
 @Entity
 @Getter
@@ -25,6 +30,8 @@ public class ExchangeDeal {
      * Счет
      */
     @Column
+    @Getter
+    @Setter
     private UUID accountGUId;
 
     /**
@@ -116,4 +123,29 @@ public class ExchangeDeal {
      */
     @Column
     private LocalDate planPaymentDate;
+
+    @OneToMany(mappedBy = "exchangeDeal", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Getter(value = AccessLevel.NONE)
+    @Setter(value = AccessLevel.NONE)
+    private List<ExchangeDealPerson> exchangeDealPersons = new ArrayList<>();
+
+    @OneToMany(mappedBy = "exchangeDeal", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Getter(value = AccessLevel.NONE)
+    @Setter(value = AccessLevel.NONE)
+    private List<ExchangeDealStatus> exchangeDealStatuses = new ArrayList<>();
+
+    public void addPersonsAll(Collection<ExchangeDealPerson> exchangeDealPersons) {
+        addAllInternal(exchangeDealPersons, this.exchangeDealPersons, ExchangeDealPerson::setExchangeDeal);
+    }
+
+    public void addStatusesAll(Collection<ExchangeDealStatus> exchangeDealStatuses) {
+        addAllInternal(exchangeDealStatuses, this.exchangeDealStatuses, ExchangeDealStatus::setExchangeDeal);
+    }
+
+    protected <T> void addAllInternal(Collection<T> from, Collection<T> to, BiConsumer<T, ExchangeDeal> consumer){
+        to.addAll(from);
+        for (T item : from) {
+            consumer.accept(item, this);
+        }
+    }
 }

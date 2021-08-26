@@ -6,10 +6,13 @@ import lombok.ToString;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jeasy.random.EasyRandom;
+import pg.hl.dto.ExchangeDealPersonSource;
 import pg.hl.dto.ExchangeDealSource;
+import pg.hl.dto.ExchangeDealStatusSource;
 import pg.hl.dto.ExchangeDealsPackage;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @ToString(onlyExplicitlyIncluded = true)
@@ -20,27 +23,47 @@ public abstract class AbstractTestItem implements TestItem {
     @ToString.Include
     private final int threadsCount;
     @ToString.Include
-    private final int packageSize;
+    private final int exchangeDealsSize;
+    @ToString.Include
+    private final int exchangeDealsPersonsSize;
+    @ToString.Include
+    private final int exchangeDealsStatusesSize;
 
     private ExchangeDealsPackage dealsPackage;
 
     @Getter(AccessLevel.PROTECTED)
     private final Logger logger;
 
-    public AbstractTestItem(TestType type, int threadsCount, int packageSize) {
+    public AbstractTestItem(TestType type, int threadsCount, int exchangeDealsSize, int exchangeDealsPersonsSize, int exchangeDealsStatusesSize) {
+        this.exchangeDealsSize = exchangeDealsSize;
+        this.exchangeDealsPersonsSize = exchangeDealsPersonsSize;
+        this.exchangeDealsStatusesSize = exchangeDealsStatusesSize;
         logger = LogManager.getLogger(getLoggerName());
 
         this.type = type;
         this.threadsCount = threadsCount;
-        this.packageSize = packageSize;
     }
 
     protected abstract String getLoggerName();
 
     public void createPackage() {
         EasyRandom easyRandom = new EasyRandom();
-        var stream = easyRandom.objects(ExchangeDealSource.class, packageSize);
-        dealsPackage = new ExchangeDealsPackage(stream.collect(Collectors.toList()));
+        var exchangeDealSourceList = easyRandom
+                .objects(ExchangeDealSource.class, exchangeDealsSize)
+                .peek(exchangeDealSource -> exchangeDealSource.getPersons().addAll(
+                        easyRandom.objects(ExchangeDealPersonSource.class, exchangeDealsPersonsSize)
+                                .collect(Collectors.toList())))
+                .peek(exchangeDealSource -> {
+                    AtomicInteger index = new AtomicInteger(1);
+                    exchangeDealSource.getStatuses().addAll(
+                            easyRandom.objects(ExchangeDealStatusSource.class, exchangeDealsStatusesSize)
+                                    .peek(exchangeDealStatusSource -> exchangeDealStatusSource.setIndex(index.getAndIncrement()))
+                                    .collect(Collectors.toList())
+                    );
+                })
+                .collect(Collectors.toList());
+
+        dealsPackage = new ExchangeDealsPackage(exchangeDealSourceList);
     }
 
     public void run() throws InvocationTargetException, IllegalAccessException {

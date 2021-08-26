@@ -4,13 +4,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pg.hl.test.TestUtils;
 
+import javax.management.OperationsException;
 import java.lang.reflect.InvocationTargetException;
 
 public class Main {
 
     static final Logger logger = LogManager.getLogger(Main.class.getName());
 
-    public static void main(String[] args) throws InvocationTargetException, IllegalAccessException {
+    public static void main(String[] args) throws InvocationTargetException, IllegalAccessException, OperationsException {
         var testItems = TestUtils.createTestItems();
 
         for (Integer index : testItems.keySet()) {

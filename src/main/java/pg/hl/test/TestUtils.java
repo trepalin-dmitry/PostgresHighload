@@ -1,6 +1,7 @@
 package pg.hl.test;
 
-import pg.hl.test.hb.simple.HibernateSimpleTestItem;
+import pg.hl.test.hb.simple.HibernateC3p0TestItem;
+import pg.hl.test.hb.simple.HibernateHikariTestItem;
 
 import java.util.ArrayList;
 
@@ -13,20 +14,19 @@ public class TestUtils {
         var items = new TestItems();
         var index = 1;
         for (TestArgument testArgument : testArguments) {
-            for (TestType type : TestType.values()) {
-                TestItem item;
-                //noinspection SwitchStatementWithTooFewBranches
-                switch (type) {
-                    case HibernateSimple:
-                        item = new HibernateSimpleTestItem(testArgument);
-                        break;
-                    default:
-                        throw new IllegalStateException("Unexpected value: " + type);
-                }
-                items.put(index++, item);
+            var currentItems = createTestItems(testArgument);
+            for (TestItem currentItem : currentItems) {
+                items.put(index++, currentItem);
             }
         }
         return items;
+    }
+
+    private static TestItem[] createTestItems(TestArgument testArgument) {
+        return new TestItem[]{
+                new HibernateHikariTestItem(testArgument),
+                new HibernateC3p0TestItem(testArgument)
+        };
     }
 }
 

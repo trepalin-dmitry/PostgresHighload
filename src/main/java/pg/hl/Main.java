@@ -1,21 +1,22 @@
 package pg.hl;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import pg.hl.test.TestUtils;
 
 import javax.management.OperationsException;
 import java.lang.reflect.InvocationTargetException;
 
 public class Main {
-
-    private static final Logger logger = LoggerFactory.getLogger(Main.class.getName());
-
     public static void main(String[] args) throws InvocationTargetException, IllegalAccessException, OperationsException {
+
+        Logger logger = LogManager.getLogger(Main.class);
+
         var testItems = TestUtils.createTestItems();
 
         for (Integer index : testItems.keySet()) {
             var item = testItems.get(index);
+
 
             logger.info("cleanDatabase start");
             item.cleanDatabase();

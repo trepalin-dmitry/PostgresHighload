@@ -9,12 +9,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class ExchangeDealDao implements Closeable {
-
+public  class ExchangeDealDao implements Closeable {
     private final Session session;
 
-    public ExchangeDealDao() {
-        session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
+    public ExchangeDealDao(Session session) {
+        this.session = session;
     }
 
     @Override
@@ -22,7 +21,7 @@ public class ExchangeDealDao implements Closeable {
         session.close();
     }
 
-    private <T> void sessionDoWithTransaction(Consumer<Session> consumer) {
+    private void sessionDoWithTransaction(Consumer<Session> consumer) {
         Transaction transaction = session.beginTransaction();
         consumer.accept(session);
         transaction.commit();

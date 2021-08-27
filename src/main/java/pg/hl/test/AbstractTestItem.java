@@ -1,11 +1,8 @@
 package pg.hl.test;
 
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.ToString;
 import org.jeasy.random.EasyRandom;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import pg.hl.dto.ExchangeDealPersonSource;
 import pg.hl.dto.ExchangeDealSource;
 import pg.hl.dto.ExchangeDealStatusSource;
@@ -19,34 +16,28 @@ import java.util.stream.Collectors;
 @Getter
 public abstract class AbstractTestItem implements TestItem {
     @ToString.Include
-    private final TestType type;
+    private final String caption;
     @ToString.Include
-    private final TestArgument params;
+    private final TestArgument argument;
 
     private ExchangeDealsPackage dealsPackage;
 
-    @Getter(AccessLevel.PROTECTED)
-    private final Logger logger;
-
-    public AbstractTestItem(TestType type, TestArgument params) {
-        logger = LoggerFactory.getLogger(getLoggerName());
-        this.type = type;
-        this.params = params;
+    public AbstractTestItem(String caption, TestArgument params) {
+        this.caption = caption;
+        this.argument = params;
     }
-
-    protected abstract String getLoggerName();
 
     public void createPackage() {
         EasyRandom easyRandom = new EasyRandom();
         var exchangeDealSourceList = easyRandom
-                .objects(ExchangeDealSource.class, params.getPackageSize())
+                .objects(ExchangeDealSource.class, argument.getPackageSize())
                 .peek(exchangeDealSource -> exchangeDealSource.getPersons().addAll(
-                        easyRandom.objects(ExchangeDealPersonSource.class, params.getExchangeDealsPersonsSize())
+                        easyRandom.objects(ExchangeDealPersonSource.class, argument.getExchangeDealsPersonsSize())
                                 .collect(Collectors.toList())))
                 .peek(exchangeDealSource -> {
                     AtomicInteger index = new AtomicInteger(1);
                     exchangeDealSource.getStatuses().addAll(
-                            easyRandom.objects(ExchangeDealStatusSource.class, params.getExchangeDealsStatusesSize())
+                            easyRandom.objects(ExchangeDealStatusSource.class, argument.getExchangeDealsStatusesSize())
                                     .peek(exchangeDealStatusSource -> exchangeDealStatusSource.setIndex(index.getAndIncrement()))
                                     .collect(Collectors.toList())
                     );
@@ -56,9 +47,7 @@ public abstract class AbstractTestItem implements TestItem {
     }
 
     public void run() throws InvocationTargetException, IllegalAccessException {
-        getLogger().info("test run start");
         runInternal(new RunArgument(dealsPackage));
-        getLogger().info("test run finish");
     }
 
     protected abstract void runInternal(RunArgument argument) throws InvocationTargetException, IllegalAccessException;

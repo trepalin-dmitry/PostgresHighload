@@ -1,5 +1,6 @@
 package pg.hl.test.hb.simple;
 
+import org.hibernate.Session;
 import pg.hl.jpa.ExchangeDeal;
 
 import java.io.Closeable;
@@ -8,8 +9,8 @@ import java.util.List;
 public class ExchangeDealService implements Closeable {
     private final ExchangeDealDao exchangeDealDao;
 
-    public ExchangeDealService() {
-        exchangeDealDao = new ExchangeDealDao();
+    public ExchangeDealService(Session session) {
+        exchangeDealDao = new ExchangeDealDao(session);
     }
 
     public void saveOrUpdateExchangeDeal(ExchangeDeal exchangeDeal) {

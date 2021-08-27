@@ -1,7 +1,7 @@
 package pg.hl;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pg.hl.test.TestUtils;
 
 import javax.management.OperationsException;
@@ -9,7 +9,7 @@ import java.lang.reflect.InvocationTargetException;
 
 public class Main {
 
-    static final Logger logger = LogManager.getLogger(Main.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(Main.class.getName());
 
     public static void main(String[] args) throws InvocationTargetException, IllegalAccessException, OperationsException {
         var testItems = TestUtils.createTestItems();

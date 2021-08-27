@@ -7,6 +7,7 @@ import pg.hl.jpa.ExchangeDealPerson;
 import pg.hl.jpa.ExchangeDealStatus;
 import pg.hl.test.AbstractTestItem;
 import pg.hl.test.RunArgument;
+import pg.hl.test.TestArgument;
 import pg.hl.test.TestType;
 
 import java.lang.reflect.InvocationTargetException;
@@ -15,8 +16,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class HibernateSimpleTestItem extends AbstractTestItem {
-    public HibernateSimpleTestItem(int threadsCount, int exchangeDealsSize, int exchangeDealsPersonsSize, int exchangeDealsStatusesSize) {
-        super(TestType.HibernateSimple, threadsCount, exchangeDealsSize, exchangeDealsPersonsSize, exchangeDealsStatusesSize);
+    public HibernateSimpleTestItem(TestArgument params) {
+        super(TestType.HibernateSimple, params);
     }
 
     @Override

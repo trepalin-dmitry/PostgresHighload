@@ -6,6 +6,7 @@ import org.hibernate.cfg.Configuration;
 import pg.hl.jpa.ExchangeDeal;
 import pg.hl.jpa.ExchangeDealPerson;
 import pg.hl.jpa.ExchangeDealStatus;
+import ru.vtb.zf.common.data.naming.PhysicalNamingStrategyQuotedImpl;
 
 public class HibernateSessionFactoryUtil {
     private static SessionFactory sessionFactory;
@@ -19,6 +20,7 @@ public class HibernateSessionFactoryUtil {
             configuration.addAnnotatedClass(ExchangeDeal.class);
             configuration.addAnnotatedClass(ExchangeDealPerson.class);
             configuration.addAnnotatedClass(ExchangeDealStatus.class);
+            configuration.setPhysicalNamingStrategy(new PhysicalNamingStrategyQuotedImpl()); // Через конфигурационный файл не работает (хотя инициализируется)
             StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties());
             sessionFactory = configuration.buildSessionFactory(builder.build());
         }

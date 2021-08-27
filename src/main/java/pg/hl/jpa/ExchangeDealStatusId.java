@@ -1,8 +1,11 @@
 package pg.hl.jpa;
 
+import lombok.EqualsAndHashCode;
+
 import java.io.Serializable;
 
 @SuppressWarnings({"FieldCanBeLocal", "unused"})
+@EqualsAndHashCode
 public class ExchangeDealStatusId implements Serializable {
     private ExchangeDeal exchangeDeal;
     private int index;

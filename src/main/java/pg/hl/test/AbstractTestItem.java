@@ -3,9 +3,9 @@ package pg.hl.test;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.ToString;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jeasy.random.EasyRandom;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pg.hl.dto.ExchangeDealPersonSource;
 import pg.hl.dto.ExchangeDealSource;
 import pg.hl.dto.ExchangeDealStatusSource;
@@ -21,27 +21,17 @@ public abstract class AbstractTestItem implements TestItem {
     @ToString.Include
     private final TestType type;
     @ToString.Include
-    private final int threadsCount;
-    @ToString.Include
-    private final int exchangeDealsSize;
-    @ToString.Include
-    private final int exchangeDealsPersonsSize;
-    @ToString.Include
-    private final int exchangeDealsStatusesSize;
+    private final TestArgument params;
 
     private ExchangeDealsPackage dealsPackage;
 
     @Getter(AccessLevel.PROTECTED)
     private final Logger logger;
 
-    public AbstractTestItem(TestType type, int threadsCount, int exchangeDealsSize, int exchangeDealsPersonsSize, int exchangeDealsStatusesSize) {
-        this.exchangeDealsSize = exchangeDealsSize;
-        this.exchangeDealsPersonsSize = exchangeDealsPersonsSize;
-        this.exchangeDealsStatusesSize = exchangeDealsStatusesSize;
-        logger = LogManager.getLogger(getLoggerName());
-
+    public AbstractTestItem(TestType type, TestArgument params) {
+        logger = LoggerFactory.getLogger(getLoggerName());
         this.type = type;
-        this.threadsCount = threadsCount;
+        this.params = params;
     }
 
     protected abstract String getLoggerName();
@@ -49,20 +39,19 @@ public abstract class AbstractTestItem implements TestItem {
     public void createPackage() {
         EasyRandom easyRandom = new EasyRandom();
         var exchangeDealSourceList = easyRandom
-                .objects(ExchangeDealSource.class, exchangeDealsSize)
+                .objects(ExchangeDealSource.class, params.getPackageSize())
                 .peek(exchangeDealSource -> exchangeDealSource.getPersons().addAll(
-                        easyRandom.objects(ExchangeDealPersonSource.class, exchangeDealsPersonsSize)
+                        easyRandom.objects(ExchangeDealPersonSource.class, params.getExchangeDealsPersonsSize())
                                 .collect(Collectors.toList())))
                 .peek(exchangeDealSource -> {
                     AtomicInteger index = new AtomicInteger(1);
                     exchangeDealSource.getStatuses().addAll(
-                            easyRandom.objects(ExchangeDealStatusSource.class, exchangeDealsStatusesSize)
+                            easyRandom.objects(ExchangeDealStatusSource.class, params.getExchangeDealsStatusesSize())
                                     .peek(exchangeDealStatusSource -> exchangeDealStatusSource.setIndex(index.getAndIncrement()))
                                     .collect(Collectors.toList())
                     );
                 })
                 .collect(Collectors.toList());
-
         dealsPackage = new ExchangeDealsPackage(exchangeDealSourceList);
     }
 

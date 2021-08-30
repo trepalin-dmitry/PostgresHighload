@@ -6,12 +6,11 @@ import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import pg.hl.dto.ExchangeDealSource;
+import pg.hl.dto.ExchangeDealsPackage;
 import pg.hl.jpa.ExchangeDeal;
 import pg.hl.jpa.ExchangeDealPerson;
 import pg.hl.jpa.ExchangeDealStatus;
 import pg.hl.test.AbstractTestItem;
-import pg.hl.test.RunArgument;
-import pg.hl.test.TestArgument;
 import ru.vtb.zf.common.data.naming.PhysicalNamingStrategyQuotedImpl;
 
 import java.lang.reflect.InvocationTargetException;
@@ -22,17 +21,13 @@ import java.util.stream.Collectors;
 public abstract class HibernateCoreTestItem extends AbstractTestItem {
     SessionFactory sessionFactory = null;
 
-    public HibernateCoreTestItem(String caption, TestArgument params) {
-        super(caption, params);
-    }
-
     @Override
-    protected void runInternal(RunArgument argument) throws InvocationTargetException, IllegalAccessException {
+    protected void uploadDeals(ExchangeDealsPackage exchangeDealsPackage) throws InvocationTargetException, IllegalAccessException {
         try (var userService = new ExchangeDealService(createSession())) {
 
             var deals = new ArrayList<ExchangeDeal>();
 
-            for (ExchangeDealSource exchangeDealSource : argument.getDealsPackage().getObjects()) {
+            for (ExchangeDealSource exchangeDealSource : exchangeDealsPackage.getObjects()) {
                 ExchangeDeal exchangeDeal = new ExchangeDeal();
                 BeanUtils.copyProperties(exchangeDeal, exchangeDealSource);
 
@@ -47,16 +42,6 @@ public abstract class HibernateCoreTestItem extends AbstractTestItem {
 
             for (ExchangeDeal deal : deals) {
                 userService.saveOrUpdateExchangeDeal(deal);
-            }
-        }
-    }
-
-    @Override
-    public void cleanDatabase() {
-        try (var userService = new ExchangeDealService(createSession())) {
-            var deals = userService.findAllExchangeDeals();
-            for (ExchangeDeal deal : deals) {
-                userService.deleteExchangeDeal(deal);
             }
         }
     }
@@ -77,7 +62,7 @@ public abstract class HibernateCoreTestItem extends AbstractTestItem {
                 .collect(Collectors.toList());
     }
 
-    private Session createSession() {
+    public Session createSession() {
         if (sessionFactory == null) {
             Configuration configuration = new Configuration().configure();
             configuration.addAnnotatedClass(ExchangeDeal.class);

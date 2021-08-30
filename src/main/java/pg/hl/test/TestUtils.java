@@ -1,34 +1,32 @@
 package pg.hl.test;
 
-import pg.hl.test.hb.simple.HibernateC3p0TestItem;
-import pg.hl.test.hb.simple.HibernateHikariTestItem;
+import org.jeasy.random.EasyRandom;
+import pg.hl.dto.ExchangeDealPersonSource;
+import pg.hl.dto.ExchangeDealSource;
+import pg.hl.dto.ExchangeDealStatusSource;
+import pg.hl.dto.ExchangeDealsPackage;
 
-import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public class TestUtils {
-    public static TestItems createTestItems() {
-
-        var testArguments = new ArrayList<TestArgument>();
-        testArguments.add(new TestArgument(1, 1, 5, 5));
-
-        var items = new TestItems();
-        var index = 1;
-        for (TestArgument testArgument : testArguments) {
-            var currentItems = createTestItems(testArgument);
-            for (TestItem currentItem : currentItems) {
-                items.put(index++, currentItem);
-            }
-        }
-        return items;
-    }
-
-    private static TestItem[] createTestItems(TestArgument testArgument) {
-        return new TestItem[]{
-                new HibernateHikariTestItem(testArgument),
-                new HibernateC3p0TestItem(testArgument)
-        };
+    public static ExchangeDealsPackage createPackage(CreatePackageArgument argument) {
+        EasyRandom easyRandom = new EasyRandom();
+        var exchangeDealSourceList = easyRandom
+                .objects(ExchangeDealSource.class, argument.getSize())
+                .peek(exchangeDealSource -> exchangeDealSource.getPersons().addAll(
+                        easyRandom.objects(ExchangeDealPersonSource.class, argument.getPersonsSize())
+                                .collect(Collectors.toList())))
+                .peek(exchangeDealSource -> {
+                    AtomicInteger index = new AtomicInteger(1);
+                    exchangeDealSource.getStatuses().addAll(
+                            easyRandom.objects(ExchangeDealStatusSource.class, argument.getStatusesSize())
+                                    .peek(exchangeDealStatusSource -> exchangeDealStatusSource.setIndex(index.getAndIncrement()))
+                                    .collect(Collectors.toList())
+                    );
+                })
+                .collect(Collectors.toList());
+        return new ExchangeDealsPackage(exchangeDealSourceList);
     }
 }
-
-
 

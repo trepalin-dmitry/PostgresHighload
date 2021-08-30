@@ -10,7 +10,7 @@
         <property name="hibernate.connection.password">postgres</property>
         <property name="hibernate.connection.pool_size">1</property>
         <property name="hibernate.show_sql">false</property>
-        <property name="hibernate.hbm2ddl.auto">create-drop</property>
+        <property name="hibernate.hbm2ddl.auto">validate</property>
 <!--        <property name="hibernate.physical_naming_strategy">pg.hl.test.hb.simple.PhysicalNamingStrategyQuotedImpl2</property>-->
     </session-factory>
 </hibernate-configuration>

@@ -2,11 +2,9 @@ package pg.hl.test.hb.simple;
 
 import org.hibernate.c3p0.internal.C3P0ConnectionProvider;
 import org.hibernate.cfg.Configuration;
-import pg.hl.test.TestArgument;
 
 public class HibernateC3p0TestItem extends HibernateCoreTestItem {
-    public HibernateC3p0TestItem(TestArgument params) {
-        super("Hibernate + C3p0", params);
+    public HibernateC3p0TestItem() {
     }
 
     @Override

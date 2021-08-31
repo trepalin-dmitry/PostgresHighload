@@ -1,4 +1,4 @@
-package pg.hl.test.hb.simple;
+package pg.hl.test.hb;
 
 import org.hibernate.c3p0.internal.C3P0ConnectionProvider;
 import org.hibernate.cfg.Configuration;

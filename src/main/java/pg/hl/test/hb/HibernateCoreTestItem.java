@@ -1,4 +1,4 @@
-package pg.hl.test.hb.simple;
+package pg.hl.test.hb;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.hibernate.Session;
@@ -15,6 +15,7 @@ import ru.vtb.zf.common.data.naming.PhysicalNamingStrategyQuotedImpl;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -79,5 +80,11 @@ public abstract class HibernateCoreTestItem extends AbstractTestItem {
     }
 
     protected abstract Configuration processConfiguration(Configuration configuration);
+
+    public Collection<ExchangeDeal> find(int size){
+        try (var userService = new ExchangeDealService(createSession())) {
+            return userService.find(size);
+        }
+    }
 }
 

@@ -1,4 +1,4 @@
-package pg.hl.test.hb.simple;
+package pg.hl.test.hb;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.hikaricp.internal.HikariCPConnectionProvider;

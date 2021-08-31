@@ -1,4 +1,4 @@
-package pg.hl.test.hb.simple;
+package pg.hl.test.hb;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;

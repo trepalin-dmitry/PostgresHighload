@@ -1,4 +1,4 @@
-package pg.hl.test.hb.simple;
+package pg.hl.test.hb;
 
 import org.hibernate.Session;
 import pg.hl.jpa.ExchangeDeal;
@@ -17,16 +17,12 @@ public class ExchangeDealService implements Closeable {
         exchangeDealDao.saveOrUpdate(exchangeDeal);
     }
 
-    public void deleteExchangeDeal(ExchangeDeal exchangeDeal) {
-        exchangeDealDao.delete(exchangeDeal);
-    }
-
-    public List<ExchangeDeal> findAllExchangeDeals() {
-        return exchangeDealDao.findAll();
-    }
-
     @Override
     public void close() {
         exchangeDealDao.close();
+    }
+
+    public List<ExchangeDeal> find(long size){
+        return exchangeDealDao.find(size);
     }
 }

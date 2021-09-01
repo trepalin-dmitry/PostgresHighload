@@ -1,6 +1,5 @@
 package pg.hl.test.hb;
 
-import lombok.Getter;
 import org.apache.commons.beanutils.BeanUtils;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -25,14 +24,12 @@ import java.util.stream.Collectors;
 public class HibernateTestItem extends AbstractTestItem {
     SessionFactory sessionFactory = null;
 
-    @Getter
-    private final Boolean useBatch;
-    @Getter
     private final ConnectionPoolType connectionPoolType;
+    private final SaveStrategy saveStrategy;
 
-    public HibernateTestItem(Boolean useBatch, ConnectionPoolType connectionPoolType) {
-        this.useBatch = useBatch;
+    public HibernateTestItem(ConnectionPoolType connectionPoolType, SaveStrategy saveStrategy) {
         this.connectionPoolType = connectionPoolType;
+        this.saveStrategy = saveStrategy;
     }
 
     @Override
@@ -54,13 +51,7 @@ public class HibernateTestItem extends AbstractTestItem {
                 deals.add(exchangeDeal);
             }
 
-            if (useBatch) {
-                userService.saveOrUpdateExchangeDeals(deals);
-            } else {
-                for (ExchangeDeal deal : deals) {
-                    userService.saveOrUpdateExchangeDeal(deal);
-                }
-            }
+            userService.saveOrUpdateExchangeDeals(deals, saveStrategy);
         } catch (Exception e) {
             throw new ProxyException(e);
         }
@@ -105,8 +96,15 @@ public class HibernateTestItem extends AbstractTestItem {
                     throw new IllegalStateException("Unexpected value: " + connectionPoolType);
             }
 
-            if (useBatch) {
-                configuration.setProperty("hibernate.jdbc.batch_size", "1000");
+            switch (saveStrategy) {
+                case Each:
+                    break;
+                case BatchHandleException:
+                case BatchCheckExistsBefore:
+                    configuration.setProperty("hibernate.jdbc.batch_size", "1000");
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected value: " + saveStrategy);
             }
 
             StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties());

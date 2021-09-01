@@ -38,11 +38,21 @@ public class Main {
         private final static Map<String, TestItem> testItems = new HashMap<>();
         private final Queue<RunArgument> runArguments = new LinkedList<>();
 
-        @Param({TestItemsCodes.HibernateHikariBatch, TestItemsCodes.StoredProcedure})
+        @Param({
+                //TestItemsCodes.HibernateHikariEach,
+                TestItemsCodes.HibernateHikariBatchCheckExistsBefore,
+                TestItemsCodes.HibernateHikariBatchHandleException,
+
+                //TestItemsCodes.HibernateC3p0Each,
+                TestItemsCodes.HibernateC3p0BatchCheckExistsBefore,
+                TestItemsCodes.HibernateC3p0BatchHandleException,
+
+                TestItemsCodes.StoredProcedure
+        })
         private String testItemCode;
         @Param("1000")
         private int packageSize;
-        @Param("1")
+        @Param({"0", "1"})
         private int packageSizeExists;
         @Param({"5"})
         private int exchangeDealsPersonsSize;

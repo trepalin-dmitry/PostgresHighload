@@ -1,7 +1,5 @@
 package pg.hl.test.hb;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.exception.ConstraintViolationException;
@@ -49,25 +47,46 @@ public class ExchangeDealDao implements Closeable {
         return users;
     }
 
-    public void saveOrUpdate(ExchangeDeal exchangeDeal) {
-        sessionDoWithTransaction(session -> session.saveOrUpdate(exchangeDeal));
+    protected void saveOrUpdateInternalEach(Collection<ExchangeDeal> exchangeDeals) {
+        sessionDoWithTransaction(session -> {
+            for (ExchangeDeal deal : exchangeDeals) {
+                session.saveOrUpdate(deal);
+            }
+        });
     }
 
-    public void saveOrUpdate(Collection<ExchangeDeal> exchangeDeals) {
-        try {
-            saveOrUpdateInternal(exchangeDeals, new HashSet<>());
-        } catch (ConstraintViolationException e) {
+    public void saveOrUpdate(Collection<ExchangeDeal> exchangeDeals, SaveStrategy useBatchMode) {
+        switch (useBatchMode) {
+            case BatchHandleException:
+                try {
+                    saveOrUpdateInternalBatch(exchangeDeals, false);
+                } catch (ConstraintViolationException e) {
+                    saveOrUpdateInternalBatch(exchangeDeals, true);
+                }
+                break;
+            case BatchCheckExistsBefore:
+                saveOrUpdateInternalBatch(exchangeDeals, true);
+                break;
+            case Each:
+                saveOrUpdateInternalEach(exchangeDeals);
+                break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + useBatchMode);
+        }
+    }
+
+    protected void saveOrUpdateInternalBatch(Collection<ExchangeDeal> exchangeDeals, boolean checkExists) throws ConstraintViolationException {
+        var existsKeys = new HashSet<UUID>();
+
+        if (checkExists) {
             // Получаем имеющиеся элементы
             var uuids = exchangeDeals.stream().map(ExchangeDeal::getGuid).collect(Collectors.toList());
             Query query = session.createQuery("SELECT e.guid FROM ExchangeDeal e where e.guid in (:guids)").setParameterList("guids", uuids);
             //noinspection unchecked
-            var list = (List<UUID>)query.getResultList();
-            var set = new HashSet<>(list);
-            saveOrUpdateInternal(exchangeDeals, set);
+            var list = (List<UUID>) query.getResultList();
+            existsKeys.addAll(list);
         }
-    }
 
-    public void saveOrUpdateInternal(Collection<ExchangeDeal> exchangeDeals, Set<UUID> existsKeys) throws ConstraintViolationException {
         var reference = new AtomicReference<ConstraintViolationException>();
 
         sessionDoWithTransaction(session -> {
@@ -93,11 +112,5 @@ public class ExchangeDealDao implements Closeable {
         if (exception != null) {
             throw exception;
         }
-    }
-
-    @Getter
-    @Setter
-    private static class GuidKey{
-        public UUID guid;
     }
 }

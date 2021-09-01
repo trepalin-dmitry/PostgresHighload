@@ -1,9 +1,11 @@
 package pg.hl.test;
 
 public final class TestItemsCodes {
-    public static final String HibernateHikari = "HibernateHikari";
-    public static final String HibernateHikariBatch = "HibernateHikariBatch";
-    public static final String HibernateC3p0 = "HibernateC3p0";
-    public static final String HibernateC3p0Batch = "HibernateC3p0Batch";
-    public static final String StoredProcedure = "StoredProcedure";
+    public static final String StoredProcedure = "Хранимая процедура";
+    public static final String HibernateC3p0Each = "Hibernate - C3p0 - Поэлементно";
+    public static final String HibernateC3p0BatchCheckExistsBefore = "Hibernate - C3p0 - Пакетно с предварительной проверкой наличия";
+    public static final String HibernateC3p0BatchHandleException = "Hibernate - C3p0 - Пакетно с проверкой наличия при исключении";
+    public static final String HibernateHikariEach = "Hibernate - Hikari - Поэлементно";
+    public static final String HibernateHikariBatchCheckExistsBefore = "Hibernate - Hikari - Пакетно с предварительной проверкой наличия";
+    public static final String HibernateHikariBatchHandleException = "Hibernate - Hikari - Пакетно с проверкой наличия при исключении";
 }

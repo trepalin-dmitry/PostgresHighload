@@ -9,6 +9,7 @@ import pg.hl.dto.ExchangeDealsPackage;
 import pg.hl.jpa.ExchangeDeal;
 import pg.hl.test.hb.ConnectionPoolType;
 import pg.hl.test.hb.HibernateTestItem;
+import pg.hl.test.hb.SaveStrategy;
 import pg.hl.test.sp.StoredProcedureTestItem;
 
 import java.sql.SQLException;
@@ -26,7 +27,7 @@ public class TestUtils {
     public static void main(String[] args)
     {
         try {
-            createTestItem(TestItemsCodes.HibernateHikariBatch)
+            createTestItem(TestItemsCodes.HibernateHikariBatchHandleException)
                     .run(new RunArgument(TestUtils
                             .createPackage(new CreatePackageArgument(1000, 2, 5, 5))));
         } catch (ProxyException | SQLException e) {
@@ -60,7 +61,7 @@ public class TestUtils {
         // Устанавливаем имеющиеся GUId
         var gapSize = argument.getSizeExists() - existsDealsGUIds.size();
         if (gapSize > 0) {
-            try (var item = (HibernateTestItem) createTestItem(TestItemsCodes.HibernateHikariBatch)) {
+            try (var item = (HibernateTestItem) createTestItem(TestItemsCodes.HibernateHikariEach)) {
                 var deals = item.find(gapSize);
                 for (ExchangeDeal deal : deals) {
                     existsDealsGUIds.add(deal.getGuid());
@@ -79,14 +80,18 @@ public class TestUtils {
         switch (code) {
             case TestItemsCodes.StoredProcedure:
                 return new StoredProcedureTestItem();
-            case TestItemsCodes.HibernateC3p0:
-                return new HibernateTestItem(false, ConnectionPoolType.C3p0);
-            case TestItemsCodes.HibernateC3p0Batch:
-                return new HibernateTestItem(true, ConnectionPoolType.C3p0);
-            case TestItemsCodes.HibernateHikari:
-                return new HibernateTestItem(false, ConnectionPoolType.Hikari);
-            case TestItemsCodes.HibernateHikariBatch:
-                return new HibernateTestItem(true, ConnectionPoolType.Hikari);
+            case TestItemsCodes.HibernateC3p0Each:
+                return new HibernateTestItem(ConnectionPoolType.C3p0, SaveStrategy.Each);
+            case TestItemsCodes.HibernateC3p0BatchCheckExistsBefore:
+                return new HibernateTestItem(ConnectionPoolType.C3p0, SaveStrategy.BatchCheckExistsBefore);
+            case TestItemsCodes.HibernateC3p0BatchHandleException:
+                return new HibernateTestItem(ConnectionPoolType.C3p0, SaveStrategy.BatchHandleException);
+            case TestItemsCodes.HibernateHikariEach:
+                return new HibernateTestItem(ConnectionPoolType.Hikari, SaveStrategy.Each);
+            case TestItemsCodes.HibernateHikariBatchCheckExistsBefore:
+                return new HibernateTestItem(ConnectionPoolType.Hikari, SaveStrategy.BatchCheckExistsBefore);
+            case TestItemsCodes.HibernateHikariBatchHandleException:
+                return new HibernateTestItem(ConnectionPoolType.Hikari, SaveStrategy.BatchHandleException);
             default:
                 throw new IllegalStateException("Unexpected value: " + code);
         }

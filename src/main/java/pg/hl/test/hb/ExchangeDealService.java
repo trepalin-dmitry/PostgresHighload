@@ -14,12 +14,8 @@ public class ExchangeDealService implements Closeable {
         exchangeDealDao = new ExchangeDealDao(session);
     }
 
-    public void saveOrUpdateExchangeDeal(ExchangeDeal exchangeDeal) {
-        exchangeDealDao.saveOrUpdate(exchangeDeal);
-    }
-
-    public void saveOrUpdateExchangeDeals(Collection<ExchangeDeal> exchangeDeals) {
-        exchangeDealDao.saveOrUpdate(exchangeDeals);
+    public void saveOrUpdateExchangeDeals(Collection<ExchangeDeal> exchangeDeals, SaveStrategy useBatchMode) {
+        exchangeDealDao.saveOrUpdate(exchangeDeals, useBatchMode);
     }
 
     @Override

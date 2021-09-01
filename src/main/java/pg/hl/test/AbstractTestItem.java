@@ -1,19 +1,15 @@
 package pg.hl.test;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import pg.hl.dto.ExchangeDealsPackage;
-
-import java.lang.reflect.InvocationTargetException;
-import java.sql.SQLException;
 
 public abstract class AbstractTestItem implements TestItem {
 
     @Override
-    public void run(RunArgument runArgument) throws InvocationTargetException, IllegalAccessException, JsonProcessingException, SQLException {
+    public void run(RunArgument runArgument) throws ProxyException {
         uploadDeals(runArgument.getDealsPackage());
     }
 
-    protected abstract void uploadDeals(ExchangeDealsPackage exchangeDealsPackage) throws InvocationTargetException, IllegalAccessException, JsonProcessingException, SQLException;
+    protected abstract void uploadDeals(ExchangeDealsPackage exchangeDealsPackage) throws ProxyException;
 
     @Override
     public void close() {
@@ -22,3 +18,4 @@ public abstract class AbstractTestItem implements TestItem {
 
     protected void internalClose(){}
 }
+

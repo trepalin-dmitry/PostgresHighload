@@ -7,6 +7,7 @@ import lombok.SneakyThrows;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import pg.hl.dto.ExchangeDealsPackage;
 import pg.hl.test.AbstractTestItem;
+import pg.hl.test.ProxyException;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
@@ -30,10 +31,14 @@ public class StoredProcedureTestItem extends AbstractTestItem {
     }
 
     @Override
-    protected void uploadDeals(ExchangeDealsPackage exchangeDealsPackage) throws JsonProcessingException, SQLException {
-        String jsonArray = objectMapper.writeValueAsString(exchangeDealsPackage.getObjects());
-        callableStatement.setString(1, jsonArray);
-        callableStatement.execute();
+    protected void uploadDeals(ExchangeDealsPackage exchangeDealsPackage) throws ProxyException {
+        try {
+            String jsonArray = objectMapper.writeValueAsString(exchangeDealsPackage.getObjects());
+            callableStatement.setString(1, jsonArray);
+            callableStatement.execute();
+        } catch (JsonProcessingException | SQLException e) {
+            throw new ProxyException(e);
+        }
     }
 
     @SneakyThrows

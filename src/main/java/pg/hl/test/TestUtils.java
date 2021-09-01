@@ -1,6 +1,5 @@
 package pg.hl.test;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.jeasy.random.EasyRandom;
 import org.jeasy.random.EasyRandomParameters;
 import pg.hl.dto.ExchangeDealPersonSource;
@@ -12,7 +11,6 @@ import pg.hl.test.hb.ConnectionPoolType;
 import pg.hl.test.hb.HibernateTestItem;
 import pg.hl.test.sp.StoredProcedureTestItem;
 
-import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,10 +23,15 @@ public class TestUtils {
     private static final EasyRandom easyRandom;
     private static final List<UUID> existsDealsGUIds = new ArrayList<>();
 
-    public static void main(String[] args) throws SQLException, JsonProcessingException, InvocationTargetException, IllegalAccessException {
-        createTestItem(TestItemsCodes.HibernateHikariBatch)
-                .run(new RunArgument(TestUtils
-                        .createPackage(new CreatePackageArgument(1000, 0, 5, 5))));
+    public static void main(String[] args)
+    {
+        try {
+            createTestItem(TestItemsCodes.HibernateHikariBatch)
+                    .run(new RunArgument(TestUtils
+                            .createPackage(new CreatePackageArgument(1000, 2, 5, 5))));
+        } catch (ProxyException | SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     static {

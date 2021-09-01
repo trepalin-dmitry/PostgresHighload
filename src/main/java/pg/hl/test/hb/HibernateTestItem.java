@@ -14,9 +14,9 @@ import pg.hl.jpa.ExchangeDeal;
 import pg.hl.jpa.ExchangeDealPerson;
 import pg.hl.jpa.ExchangeDealStatus;
 import pg.hl.test.AbstractTestItem;
+import pg.hl.test.ProxyException;
 import ru.vtb.zf.common.data.naming.PhysicalNamingStrategyQuotedImpl;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -36,7 +36,7 @@ public class HibernateTestItem extends AbstractTestItem {
     }
 
     @Override
-    protected void uploadDeals(ExchangeDealsPackage exchangeDealsPackage) throws InvocationTargetException, IllegalAccessException {
+    protected void uploadDeals(ExchangeDealsPackage exchangeDealsPackage) throws ProxyException {
         try (var userService = new ExchangeDealService(createSession())) {
 
             var deals = new ArrayList<ExchangeDeal>();
@@ -61,6 +61,8 @@ public class HibernateTestItem extends AbstractTestItem {
                     userService.saveOrUpdateExchangeDeal(deal);
                 }
             }
+        } catch (Exception e) {
+            throw new ProxyException(e);
         }
     }
 
@@ -88,8 +90,7 @@ public class HibernateTestItem extends AbstractTestItem {
             configuration.addAnnotatedClass(ExchangeDealStatus.class);
             configuration.setPhysicalNamingStrategy(new PhysicalNamingStrategyQuotedImpl()); // Через конфигурационный файл не работает (хотя инициализируется)
 
-            switch (connectionPoolType)
-            {
+            switch (connectionPoolType) {
                 case Hikari:
                     configuration.setProperty("hibernate.connection.provider_class", HikariCPConnectionProvider.class.getCanonicalName());
                     break;

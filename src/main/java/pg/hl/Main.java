@@ -42,7 +42,7 @@ public class Main {
         private String testItemCode;
         @Param("1000")
         private int packageSize;
-        @Param("0")
+        @Param("1")
         private int packageSizeExists;
         @Param({"5"})
         private int exchangeDealsPersonsSize;

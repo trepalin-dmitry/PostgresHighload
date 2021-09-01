@@ -4,6 +4,7 @@ import org.hibernate.Session;
 import pg.hl.jpa.ExchangeDeal;
 
 import java.io.Closeable;
+import java.util.Collection;
 import java.util.List;
 
 public class ExchangeDealService implements Closeable {
@@ -15,6 +16,10 @@ public class ExchangeDealService implements Closeable {
 
     public void saveOrUpdateExchangeDeal(ExchangeDeal exchangeDeal) {
         exchangeDealDao.saveOrUpdate(exchangeDeal);
+    }
+
+    public void saveOrUpdateExchangeDeals(Collection<ExchangeDeal> exchangeDeals) {
+        exchangeDealDao.saveOrUpdate(exchangeDeals);
     }
 
     @Override

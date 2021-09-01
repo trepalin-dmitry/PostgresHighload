@@ -2,11 +2,13 @@ package pg.hl.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+@ToString
 public abstract class AbstractDataPackage<T extends AbstractDataObject> implements DataPackage<T> {
     @JsonIgnore
     private final List<T> listObjects = new ArrayList<>();

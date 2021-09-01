@@ -6,6 +6,7 @@ import pg.hl.jpa.ExchangeDeal;
 
 import java.io.Closeable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -40,5 +41,14 @@ public  class ExchangeDealDao implements Closeable {
 
     public void saveOrUpdate(ExchangeDeal exchangeDeal) {
         sessionDoWithTransaction(session -> session.saveOrUpdate(exchangeDeal));
+    }
+
+    public void saveOrUpdate(Collection<ExchangeDeal> exchangeDeals) {
+        sessionDoWithTransaction(session -> {
+            for (ExchangeDeal exchangeDeal : exchangeDeals) {
+                session.persist(exchangeDeal);
+            }
+            session.flush();
+        });
     }
 }

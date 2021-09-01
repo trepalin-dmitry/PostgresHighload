@@ -1,5 +1,6 @@
 package pg.hl.test;
 
+import com.mchange.util.AssertException;
 import lombok.Getter;
 
 @Getter
@@ -14,5 +15,9 @@ public class CreatePackageArgument {
         this.sizeExists = sizeExists;
         this.personsSize = personsSize;
         this.statusesSize = statusesSize;
+
+        if (sizeExists > size){
+            throw new AssertException("sizeExists > size");
+        }
     }
 }

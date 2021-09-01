@@ -1,10 +1,13 @@
 package pg.hl.test.hb;
 
+import lombok.Getter;
 import org.apache.commons.beanutils.BeanUtils;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.c3p0.internal.C3P0ConnectionProvider;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.hikaricp.internal.HikariCPConnectionProvider;
 import pg.hl.dto.ExchangeDealSource;
 import pg.hl.dto.ExchangeDealsPackage;
 import pg.hl.jpa.ExchangeDeal;
@@ -19,8 +22,18 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public abstract class HibernateCoreTestItem extends AbstractTestItem {
+public class HibernateTestItem extends AbstractTestItem {
     SessionFactory sessionFactory = null;
+
+    @Getter
+    private final Boolean useBatch;
+    @Getter
+    private final ConnectionPoolType connectionPoolType;
+
+    public HibernateTestItem(Boolean useBatch, ConnectionPoolType connectionPoolType) {
+        this.useBatch = useBatch;
+        this.connectionPoolType = connectionPoolType;
+    }
 
     @Override
     protected void uploadDeals(ExchangeDealsPackage exchangeDealsPackage) throws InvocationTargetException, IllegalAccessException {
@@ -41,8 +54,12 @@ public abstract class HibernateCoreTestItem extends AbstractTestItem {
                 deals.add(exchangeDeal);
             }
 
-            for (ExchangeDeal deal : deals) {
-                userService.saveOrUpdateExchangeDeal(deal);
+            if (useBatch) {
+                userService.saveOrUpdateExchangeDeals(deals);
+            } else {
+                for (ExchangeDeal deal : deals) {
+                    userService.saveOrUpdateExchangeDeal(deal);
+                }
             }
         }
     }
@@ -71,7 +88,25 @@ public abstract class HibernateCoreTestItem extends AbstractTestItem {
             configuration.addAnnotatedClass(ExchangeDealStatus.class);
             configuration.setPhysicalNamingStrategy(new PhysicalNamingStrategyQuotedImpl()); // Через конфигурационный файл не работает (хотя инициализируется)
 
-            configuration = processConfiguration(configuration);
+            switch (connectionPoolType)
+            {
+                case Hikari:
+                    configuration.setProperty("hibernate.connection.provider_class", HikariCPConnectionProvider.class.getCanonicalName());
+                    break;
+                case C3p0:
+                    configuration.setProperty("hibernate.connection.provider_class", C3P0ConnectionProvider.class.getCanonicalName());
+                    configuration.setProperty("hibernate.c3p0.min_size", "5");
+                    configuration.setProperty("hibernate.c3p0.max_size", "20");
+                    configuration.setProperty("hibernate.c3p0.acquire_increment", "5");
+                    configuration.setProperty("hibernate.c3p0.timeout", "1800");
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected value: " + connectionPoolType);
+            }
+
+            if (useBatch) {
+                configuration.setProperty("hibernate.jdbc.batch_size", "1000");
+            }
 
             StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties());
             sessionFactory = configuration.buildSessionFactory(builder.build());
@@ -79,9 +114,7 @@ public abstract class HibernateCoreTestItem extends AbstractTestItem {
         return sessionFactory.openSession();
     }
 
-    protected abstract Configuration processConfiguration(Configuration configuration);
-
-    public Collection<ExchangeDeal> find(int size){
+    public Collection<ExchangeDeal> find(int size) {
         try (var userService = new ExchangeDealService(createSession())) {
             return userService.find(size);
         }

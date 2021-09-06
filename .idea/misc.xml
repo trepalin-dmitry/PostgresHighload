@@ -7,6 +7,7 @@
     </list>
     <writeAnnotations>
       <writeAnnotation name="org.openjdk.jmh.annotations.Param" />
+      <writeAnnotation name="javax.persistence.Column" />
     </writeAnnotations>
   </component>
   <component name="ExternalStorageConfigurationManager" enabled="true" />

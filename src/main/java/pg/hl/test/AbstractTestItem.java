@@ -3,7 +3,6 @@ package pg.hl.test;
 import pg.hl.dto.ExchangeDealsPackage;
 
 public abstract class AbstractTestItem implements TestItem {
-
     @Override
     public void run(RunArgument runArgument) throws ProxyException {
         uploadDeals(runArgument.getDealsPackage());
@@ -16,6 +15,7 @@ public abstract class AbstractTestItem implements TestItem {
         internalClose();
     }
 
-    protected void internalClose(){}
+    protected void internalClose() {
+    }
 }
 

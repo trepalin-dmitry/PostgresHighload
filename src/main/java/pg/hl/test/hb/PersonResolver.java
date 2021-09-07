@@ -2,7 +2,7 @@ package pg.hl.test.hb;
 
 import org.hibernate.Session;
 import pg.hl.test.ResolveStrategy;
-import pg.hl.test.hb.jpa.Person;
+import pg.hl.test.hb.common.Person;
 
 import java.util.UUID;
 

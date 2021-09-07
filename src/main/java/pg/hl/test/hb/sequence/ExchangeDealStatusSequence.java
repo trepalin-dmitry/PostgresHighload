@@ -1,4 +1,4 @@
-package pg.hl.test.hb.jpa;
+package pg.hl.test.hb.sequence;
 
 import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -7,6 +7,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import pg.hl.test.hb.common.ExchangeDealStatusType;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -16,14 +17,14 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Accessors(chain = true)
-@Table(name = "exchangeDealsStatuses")
-@IdClass(ExchangeDealStatus.ExchangeDealStatusId.class)
-public class ExchangeDealStatus {
+@Table(name = "exchangeDealsStatusesSequence")
+@IdClass(ExchangeDealStatusSequence.ExchangeDealStatusId.class)
+public class ExchangeDealStatusSequence {
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "exchangeDealId", nullable = false)
     @JsonIgnore
-    private ExchangeDeal exchangeDeal;
+    private ExchangeDealSequence exchangeDeal;
 
     @Id
     @Column(nullable = false)
@@ -43,14 +44,14 @@ public class ExchangeDealStatus {
 
     @EqualsAndHashCode
     public static class ExchangeDealStatusId implements Serializable {
-        private ExchangeDeal exchangeDeal;
+        private ExchangeDealSequence exchangeDeal;
         private int index;
 
         public ExchangeDealStatusId() {
         }
 
         @SuppressWarnings("unused")
-        public ExchangeDealStatusId(ExchangeDeal exchangeDeal, int index) {
+        public ExchangeDealStatusId(ExchangeDealSequence exchangeDeal, int index) {
             this();
             this.exchangeDeal = exchangeDeal;
             this.index = index;

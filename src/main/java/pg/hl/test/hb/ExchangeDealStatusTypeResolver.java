@@ -2,7 +2,7 @@ package pg.hl.test.hb;
 
 import org.hibernate.Session;
 import pg.hl.test.ResolveStrategy;
-import pg.hl.test.hb.jpa.ExchangeDealStatusType;
+import pg.hl.test.hb.common.ExchangeDealStatusType;
 
 public class ExchangeDealStatusTypeResolver extends HibernateTestItemResolver<ExchangeDealStatusType, Character, String> {
 

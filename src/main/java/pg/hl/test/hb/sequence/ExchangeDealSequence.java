@@ -1,8 +1,9 @@
-package pg.hl.test.hb.jpa;
+package pg.hl.test.hb.sequence;
 
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 
 import javax.persistence.*;
@@ -19,15 +20,18 @@ import java.util.function.BiConsumer;
 @Getter
 @Setter
 @Accessors(chain = true)
-@Table(name = "exchangeDeals")
-public class ExchangeDeal {
+@Table(name = "exchangeDealsSequence")
+@ToString(callSuper = true)
+public class ExchangeDealSequence {
+    private static final String SEQUENCE_NAME = "exchange_deals_sequence_id_seq";
+
     /**
      * ID объекта
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = SEQUENCE_NAME)
+    @SequenceGenerator(name = SEQUENCE_NAME, sequenceName = SEQUENCE_NAME)
     @Column(nullable = false)
-    @Setter(value = AccessLevel.NONE)
     private Long id;
 
     /**
@@ -135,27 +139,30 @@ public class ExchangeDeal {
     @OneToMany(mappedBy = "exchangeDeal", cascade = CascadeType.ALL, orphanRemoval = true)
     @Getter(value = AccessLevel.NONE)
     @Setter(value = AccessLevel.NONE)
-    private List<ExchangeDealPerson> exchangeDealPersons = new ArrayList<>();
+    @ToString.Exclude
+    private List<ExchangeDealPersonSequence> exchangeDealPersons = new ArrayList<>();
 
     @OneToMany(mappedBy = "exchangeDeal", cascade = CascadeType.ALL, orphanRemoval = true)
     @Getter(value = AccessLevel.NONE)
     @Setter(value = AccessLevel.NONE)
-    private List<ExchangeDealStatus> exchangeDealStatuses = new ArrayList<>();
+    @ToString.Exclude
+    private List<ExchangeDealStatusSequence> exchangeDealStatuses = new ArrayList<>();
 
-    public ExchangeDeal addPersonsAll(Collection<ExchangeDealPerson> exchangeDealPersons) {
-        addAllInternal(exchangeDealPersons, this.exchangeDealPersons, ExchangeDealPerson::setExchangeDeal);
+    public ExchangeDealSequence addPersonsAll(Collection<ExchangeDealPersonSequence> exchangeDealPersons) {
+        addAllInternal(exchangeDealPersons, this.exchangeDealPersons, ExchangeDealPersonSequence::setExchangeDeal);
         return this;
     }
 
-    public ExchangeDeal addStatusesAll(Collection<ExchangeDealStatus> exchangeDealStatuses) {
-        addAllInternal(exchangeDealStatuses, this.exchangeDealStatuses, ExchangeDealStatus::setExchangeDeal);
+    public ExchangeDealSequence addStatusesAll(Collection<ExchangeDealStatusSequence> exchangeDealStatuses) {
+        addAllInternal(exchangeDealStatuses, this.exchangeDealStatuses, ExchangeDealStatusSequence::setExchangeDeal);
         return this;
     }
 
-    protected <T> void addAllInternal(Collection<T> from, Collection<T> to, BiConsumer<T, ExchangeDeal> consumer){
+    protected <T> void addAllInternal(Collection<T> from, Collection<T> to, BiConsumer<T, ExchangeDealSequence> consumer) {
         to.addAll(from);
         for (T item : from) {
             consumer.accept(item, this);
         }
     }
 }
+

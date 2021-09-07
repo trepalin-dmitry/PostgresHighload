@@ -6,9 +6,9 @@ import pg.hl.dto.ExchangeDealPersonSource;
 import pg.hl.dto.ExchangeDealSource;
 import pg.hl.dto.ExchangeDealStatusSource;
 import pg.hl.dto.ExchangeDealsPackage;
-import pg.hl.test.hb.ConnectionPoolType;
-import pg.hl.test.hb.HibernateTestItem;
-import pg.hl.test.hb.SaveStrategy;
+import pg.hl.test.hb.*;
+import pg.hl.test.hb.identity.HibernateTestItemIdentity;
+import pg.hl.test.hb.sequence.HibernateTestItemSequence;
 import pg.hl.test.sp.StoredProcedureTestItem;
 
 import java.sql.SQLException;
@@ -17,26 +17,26 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class TestUtils {
-    private static final EasyRandom easyRandom;
+    public static final EasyRandom EASY_RANDOM;
 
     static {
         // Создаем генератор
         EasyRandomParameters easyRandomParameters = new EasyRandomParameters();
         easyRandomParameters.setSeed(new Random().nextLong());
-        easyRandom = new EasyRandom(easyRandomParameters);
+        EASY_RANDOM = new EasyRandom(easyRandomParameters);
     }
 
     public static ExchangeDealsPackage createPackage(CreatePackageArgument argument) throws SQLException {
-        var exchangeDealSourceList = easyRandom
+        var exchangeDealSourceList = EASY_RANDOM
                 .objects(ExchangeDealSource.class, argument.getSize())
                 .peek(exchangeDealSource -> exchangeDealSource.getPersons().addAll(
-                        easyRandom.objects(ExchangeDealPersonSource.class, argument.getPersonsSize())
+                        EASY_RANDOM.objects(ExchangeDealPersonSource.class, argument.getPersonsSize())
                                 .peek(exchangeDealPersonSource -> exchangeDealPersonSource.setPersonGUId(ExistsDataController.getRandomPersonGuid()))
                                 .collect(Collectors.toList())))
                 .peek(exchangeDealSource -> {
                     AtomicInteger index = new AtomicInteger(1);
                     exchangeDealSource.getStatuses().addAll(
-                            easyRandom.objects(ExchangeDealStatusSource.class, argument.getStatusesSize())
+                            EASY_RANDOM.objects(ExchangeDealStatusSource.class, argument.getStatusesSize())
                                     .peek(exchangeDealStatusSource -> {
                                         exchangeDealStatusSource.setIndex(index.getAndIncrement());
                                         exchangeDealStatusSource.setTypeCode(ExistsDataController.getRandomStatusCode());
@@ -55,29 +55,52 @@ public class TestUtils {
         return new ExchangeDealsPackage(exchangeDealSourceList);
     }
 
-    public static HibernateTestItem createDefaultTestItem() throws SQLException {
-        return (HibernateTestItem) createTestItem(new CreateTestItemArgument(TestItemsCodes.Hibernate.Hikari.Each, ResolveStrategy.Cache));
+    public static HibernateTestItemIdentity createDefaultTestItem() throws SQLException {
+        return (HibernateTestItemIdentity) createTestItem(new CreateTestItemArgument(TestItemsCodes.Hibernate.Hikari.Each.Before, ResolveStrategy.Cache, IdentityStrategy.Identity));
     }
 
     public static TestItem createTestItem(CreateTestItemArgument argument) throws SQLException {
-        ResolveStrategy resolveStrategy = argument.getResolveStrategy();
         switch (argument.getCode()) {
             case TestItemsCodes.StoredProcedure:
-                return new StoredProcedureTestItem(resolveStrategy);
-            case TestItemsCodes.Hibernate.C3p0.Each:
-                return new HibernateTestItem(resolveStrategy, ConnectionPoolType.C3p0, SaveStrategy.Each);
-            case TestItemsCodes.Hibernate.C3p0.Batch.Check:
-                return new HibernateTestItem(resolveStrategy, ConnectionPoolType.C3p0, SaveStrategy.BatchCheckExistsBefore);
-            case TestItemsCodes.Hibernate.C3p0.Batch.NoCheck:
-                return new HibernateTestItem(resolveStrategy, ConnectionPoolType.C3p0, SaveStrategy.BatchHandleException);
-            case TestItemsCodes.Hibernate.Hikari.Each:
-                return new HibernateTestItem(resolveStrategy, ConnectionPoolType.Hikari, SaveStrategy.Each);
-            case TestItemsCodes.Hibernate.Hikari.Batch.Check:
-                return new HibernateTestItem(resolveStrategy, ConnectionPoolType.Hikari, SaveStrategy.BatchCheckExistsBefore);
-            case TestItemsCodes.Hibernate.Hikari.Batch.NoCheck:
-                return new HibernateTestItem(resolveStrategy, ConnectionPoolType.Hikari, SaveStrategy.BatchHandleException);
+                return new StoredProcedureTestItem(argument);
+
+            case TestItemsCodes.Hibernate.C3p0.Each.OnException:
+                return createHibernateTestItem(new CreateHibernateTestItemArgument(argument, ConnectionPoolType.C3p0, SaveStrategy.Each, CheckExistsStrategy.OnException));
+            case TestItemsCodes.Hibernate.C3p0.Each.Before:
+                return createHibernateTestItem(new CreateHibernateTestItemArgument(argument, ConnectionPoolType.C3p0, SaveStrategy.Each, CheckExistsStrategy.Before));
+            case TestItemsCodes.Hibernate.C3p0.Batch.OnException:
+                return createHibernateTestItem(new CreateHibernateTestItemArgument(argument, ConnectionPoolType.C3p0, SaveStrategy.Batch, CheckExistsStrategy.OnException));
+            case TestItemsCodes.Hibernate.C3p0.Batch.Before:
+                return createHibernateTestItem(new CreateHibernateTestItemArgument(argument, ConnectionPoolType.C3p0, SaveStrategy.Batch, CheckExistsStrategy.Before));
+
+            case TestItemsCodes.Hibernate.Hikari.Each.OnException:
+                return createHibernateTestItem(new CreateHibernateTestItemArgument(argument, ConnectionPoolType.Hikari, SaveStrategy.Each, CheckExistsStrategy.OnException));
+            case TestItemsCodes.Hibernate.Hikari.Each.Before:
+                return createHibernateTestItem(new CreateHibernateTestItemArgument(argument, ConnectionPoolType.Hikari, SaveStrategy.Each, CheckExistsStrategy.Before));
+            case TestItemsCodes.Hibernate.Hikari.Batch.OnException:
+                return createHibernateTestItem(new CreateHibernateTestItemArgument(argument, ConnectionPoolType.Hikari, SaveStrategy.Batch, CheckExistsStrategy.OnException));
+            case TestItemsCodes.Hibernate.Hikari.Batch.Before:
+                return createHibernateTestItem(new CreateHibernateTestItemArgument(argument, ConnectionPoolType.Hikari, SaveStrategy.Batch, CheckExistsStrategy.Before));
+
             default:
                 throw new IllegalStateException("Unexpected value: " + argument.getCode());
+        }
+    }
+
+    private static TestItem createHibernateTestItem(CreateHibernateTestItemArgument argument) {
+        switch (argument.getParentArgument().getIdentityStrategy()) {
+            case Identity:
+                return new HibernateTestItemIdentity(argument);
+            case Sequence:
+                return new HibernateTestItemSequence(argument);
+            default:
+                throw new IllegalStateException("Unexpected value: " + argument.getParentArgument().getIdentityStrategy());
+        }
+    }
+
+    public static void main(String[] args) throws SQLException {
+        try (var item = createDefaultTestItem()) {
+            item.findDeals(1);
         }
     }
 }

@@ -1,4 +1,4 @@
-package pg.hl.test.hb.jpa;
+package pg.hl.test.hb.identity;
 
 import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.Accessors;
+import pg.hl.test.hb.common.Person;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -16,14 +17,14 @@ import java.io.Serializable;
 @Getter
 @Setter
 @Accessors(chain = true)
-@Table(name = "exchangeDealsPersons")
-@IdClass(ExchangeDealPerson.ExchangeDealPersonId.class)
-public class ExchangeDealPerson {
+@Table(name = "exchangeDealsPersonsIdentity")
+@IdClass(ExchangeDealPersonIdentity.ExchangeDealPersonId.class)
+public class ExchangeDealPersonIdentity {
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "exchangeDealId", nullable = false)
     @JsonIgnore
-    private ExchangeDeal exchangeDeal;
+    private ExchangeDealIdentity exchangeDeal;
 
     @Id
     @ManyToOne
@@ -38,17 +39,18 @@ public class ExchangeDealPerson {
     @EqualsAndHashCode
     @ToString
     public static class ExchangeDealPersonId implements Serializable {
-        private ExchangeDeal exchangeDeal;
+        private ExchangeDealIdentity exchangeDeal;
         private Person person;
 
-        public ExchangeDealPersonId(){
+        public ExchangeDealPersonId() {
         }
 
         @SuppressWarnings("unused")
-        public ExchangeDealPersonId(ExchangeDeal exchangeDeal, Person person) {
+        public ExchangeDealPersonId(ExchangeDealIdentity exchangeDeal, Person person) {
             this();
             this.exchangeDeal = exchangeDeal;
             this.person = person;
         }
     }
 }
+

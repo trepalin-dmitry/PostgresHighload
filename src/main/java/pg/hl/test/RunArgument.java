@@ -1,16 +1,16 @@
 package pg.hl.test;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
 import pg.hl.dto.ExchangeDealsPackage;
+import pg.hl.test.hb.IdentityStrategy;
 
 @ToString
+@Getter
+@AllArgsConstructor
 public class RunArgument {
-    @Getter
     @ToString.Exclude
     private final ExchangeDealsPackage dealsPackage;
-
-    public RunArgument(ExchangeDealsPackage dealsPackage) {
-        this.dealsPackage = dealsPackage;
-    }
+    private final IdentityStrategy identityStrategy;
 }

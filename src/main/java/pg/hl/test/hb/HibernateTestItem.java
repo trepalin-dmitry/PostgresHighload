@@ -1,5 +1,6 @@
 package pg.hl.test.hb;
 
+import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -11,46 +12,53 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.hikaricp.internal.HikariCPConnectionProvider;
 import org.postgresql.Driver;
 import pg.hl.dto.ExchangeDealsPackage;
-import pg.hl.test.ResolveStrategy;
-import pg.hl.test.hb.jpa.*;
 import pg.hl.test.AbstractTestItem;
 import pg.hl.test.ProxyException;
+import pg.hl.test.hb.common.ExchangeDealStatusType;
+import pg.hl.test.hb.common.Person;
+import pg.hl.test.hb.identity.ExchangeDealIdentity;
+import pg.hl.test.hb.identity.ExchangeDealPersonIdentity;
+import pg.hl.test.hb.identity.ExchangeDealStatusIdentity;
+import pg.hl.test.hb.sequence.ExchangeDealPersonSequence;
+import pg.hl.test.hb.sequence.ExchangeDealSequence;
+import pg.hl.test.hb.sequence.ExchangeDealStatusSequence;
 import ru.vtb.zf.common.data.naming.PhysicalNamingStrategyQuotedImpl;
 
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class HibernateTestItem extends AbstractTestItem {
-    SessionFactory sessionFactory = null;
-    private final ConnectionPoolType connectionPoolType;
-    private final SaveStrategy saveStrategy;
-    private final HibernateTestItemMapper mapper;
+public abstract class HibernateTestItem<TypeExchangeDeal> extends AbstractTestItem {
+    private SessionFactory sessionFactory = null;
     private final Session session;
     private final ExchangeDealStatusTypeResolver exchangeDealStatusTypeResolver;
     private final PersonResolver personResolver;
+    private final HibernateTestItemMapper<TypeExchangeDeal> mapper;
+    private final CreateHibernateTestItemArgument argument;
+    private final String exchangeDealHqlName;
 
-    public HibernateTestItem(ResolveStrategy resolveStrategy, ConnectionPoolType connectionPoolType, SaveStrategy saveStrategy) {
-        this.connectionPoolType = connectionPoolType;
-        this.saveStrategy = saveStrategy;
-        this.mapper = new HibernateTestItemMapper(this);
+    public HibernateTestItem(CreateHibernateTestItemArgument argument) {
+        this.argument = argument;
+        this.exchangeDealHqlName = createExchangeDealHqlName();
+        this.mapper = createMapper();
         this.session = createSessionInternal();
-        this.exchangeDealStatusTypeResolver = new ExchangeDealStatusTypeResolver(resolveStrategy, session);
-        this.personResolver = new PersonResolver(resolveStrategy, session);
+        this.exchangeDealStatusTypeResolver = new ExchangeDealStatusTypeResolver(this.argument.getParentArgument().getResolveStrategy(), session);
+        this.personResolver = new PersonResolver(this.argument.getParentArgument().getResolveStrategy(), session);
         loadCache();
     }
+
+    protected abstract String createExchangeDealHqlName();
+
+    protected abstract HibernateTestItemMapper<TypeExchangeDeal> createMapper();
 
     @Override
     protected void uploadDeals(ExchangeDealsPackage exchangeDealsPackage) throws ProxyException {
         try {
             var exchangeDeals = mapper.parse(exchangeDealsPackage);
-            saveOrUpdate(exchangeDeals, saveStrategy);
-        } catch (InvocationTargetException | IllegalAccessException e) {
+            saveOrUpdate(exchangeDeals, argument.getSaveStrategy(), argument.getCheckExistsStrategy());
+        } catch (Throwable e) {
             throw new ProxyException(e);
         }
     }
@@ -65,44 +73,48 @@ public class HibernateTestItem extends AbstractTestItem {
             configuration.setProperty("hibernate.connection.username", "postgres");
             configuration.setProperty("hibernate.connection.password", "postgres");
             configuration.setProperty("hibernate.connection.pool_size", Integer.toString(1));
-            configuration.setProperty("hibernate.show_sql", Boolean.toString(false));
+            configuration.setProperty("hibernate.show_sql", Boolean.toString(true));
             configuration.setProperty("hibernate.hbm2ddl.auto",
-                    //"create-drop"
-                    "validate"
+                    "create-drop"
+//                    "validate"
             );
-
-            configuration.addAnnotatedClass(Person.class);
-            configuration.addAnnotatedClass(ExchangeDealStatusType.class);
-            configuration.addAnnotatedClass(ExchangeDeal.class);
-            configuration.addAnnotatedClass(ExchangeDealPerson.class);
-            configuration.addAnnotatedClass(ExchangeDealStatus.class);
 
             configuration.setPhysicalNamingStrategy(new PhysicalNamingStrategyQuotedImpl()); // Через конфигурационный файл не работает (хотя инициализируется)
 
-            switch (connectionPoolType) {
+            configuration.addAnnotatedClass(Person.class);
+            configuration.addAnnotatedClass(ExchangeDealStatusType.class);
+
+            configuration.addAnnotatedClass(ExchangeDealSequence.class);
+            configuration.addAnnotatedClass(ExchangeDealPersonSequence.class);
+            configuration.addAnnotatedClass(ExchangeDealStatusSequence.class);
+
+            configuration.addAnnotatedClass(ExchangeDealIdentity.class);
+            configuration.addAnnotatedClass(ExchangeDealPersonIdentity.class);
+            configuration.addAnnotatedClass(ExchangeDealStatusIdentity.class);
+
+            switch (argument.getConnectionPoolType()) {
                 case Hikari:
                     configuration.setProperty("hibernate.connection.provider_class", HikariCPConnectionProvider.class.getCanonicalName());
                     break;
                 case C3p0:
                     configuration.setProperty("hibernate.connection.provider_class", C3P0ConnectionProvider.class.getCanonicalName());
                     configuration.setProperty("hibernate.c3p0.min_size", "5");
-                    configuration.setProperty("hibernate.c3p0.max_size", "20");
+                    configuration.setProperty("hibernate.c3p0.max_size", Integer.toString(Integer.MAX_VALUE));
                     configuration.setProperty("hibernate.c3p0.acquire_increment", "5");
                     configuration.setProperty("hibernate.c3p0.timeout", "1800");
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected value: " + connectionPoolType);
+                    throw new IllegalStateException("Unexpected value: " + argument.getConnectionPoolType());
             }
 
-            switch (saveStrategy) {
+            switch (argument.getSaveStrategy()) {
                 case Each:
                     break;
-                case BatchHandleException:
-                case BatchCheckExistsBefore:
+                case Batch:
                     configuration.setProperty("hibernate.jdbc.batch_size", "1000");
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected value: " + saveStrategy);
+                    throw new IllegalStateException("Unexpected value: " + argument.getSaveStrategy());
             }
 
             StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties());
@@ -111,15 +123,17 @@ public class HibernateTestItem extends AbstractTestItem {
         return sessionFactory.openSession();
     }
 
-    public Collection<ExchangeDeal> findDeals(int maxValue) {
-        var query = session.createQuery("From ExchangeDeal");
+    public Collection<TypeExchangeDeal> findDeals(int maxValue) {
+        var query = session.createQuery("From " + exchangeDealHqlName);
         query.setMaxResults(maxValue);
-        List<ExchangeDeal> result = new ArrayList<>();
+        List<TypeExchangeDeal> result = new ArrayList<>();
         for (Object o : query.list()) {
-            result.add((ExchangeDeal) o);
+            result.add(parse(o));
         }
         return result;
     }
+
+    protected abstract TypeExchangeDeal parse(Object o);
 
     public Collection<Person> findPersons(int maxValue) {
         return findInternal("From Person", maxValue, o -> (Person) o);
@@ -137,82 +151,104 @@ public class HibernateTestItem extends AbstractTestItem {
         return result;
     }
 
-    private void sessionDoWithTransaction(Consumer<Session> consumer) {
+    private void sessionDoWithTransaction(SessionConsumer consumer) {
         Transaction transaction = session.beginTransaction();
         try {
             consumer.accept(session);
             transaction.commit();
         } catch (Exception exception) {
             transaction.rollback();
-            throw exception;
         }
     }
 
-    protected void saveOrUpdateInternalEach(Collection<ExchangeDeal> exchangeDeals) {
-        sessionDoWithTransaction(session -> {
-            for (ExchangeDeal deal : exchangeDeals) {
-                session.saveOrUpdate(deal);
-            }
-        });
-    }
+    public void saveOrUpdate(Collection<TypeExchangeDeal> exchangeDeals, SaveStrategy saveStrategy, CheckExistsStrategy checkExistsStrategy) {
+        SaveConsumer<TypeExchangeDeal> saveConsumer;
 
-    public void saveOrUpdate(Collection<ExchangeDeal> exchangeDeals, SaveStrategy useBatchMode) {
-        switch (useBatchMode) {
-            case BatchHandleException:
-                try {
-                    saveOrUpdateInternalBatch(exchangeDeals, false);
-                } catch (ConstraintViolationException e) {
-                    saveOrUpdateInternalBatch(exchangeDeals, true);
-                }
-                break;
-            case BatchCheckExistsBefore:
-                saveOrUpdateInternalBatch(exchangeDeals, true);
+        switch (saveStrategy) {
+            case Batch:
+                saveConsumer = this::saveOrUpdateInternalBatch;
                 break;
             case Each:
-                saveOrUpdateInternalEach(exchangeDeals);
+                saveConsumer = this::saveOrUpdateInternalEach;
                 break;
             default:
-                throw new IllegalStateException("Unexpected value: " + useBatchMode);
+                throw new IllegalStateException("Unexpected value: " + saveStrategy);
+        }
+
+        saveOrUpdate(exchangeDeals, checkExistsStrategy, saveConsumer);
+    }
+
+    private void saveOrUpdate(Collection<TypeExchangeDeal> exchangeDeals, CheckExistsStrategy checkExistsStrategy, SaveConsumer<TypeExchangeDeal> consumer) {
+        switch (checkExistsStrategy) {
+            case Before:
+                consumer.accept(new SaveConsumerArgument<>(exchangeDeals, true));
+                break;
+            case OnException:
+                try {
+                    consumer.accept(new SaveConsumerArgument<>(exchangeDeals, false));
+                } catch (PersistenceException e) {
+                    if (e.getCause() instanceof ConstraintViolationException) {
+                        consumer.accept(new SaveConsumerArgument<>(exchangeDeals, true));
+                    }
+                }
+                break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + checkExistsStrategy);
         }
     }
 
-    protected void saveOrUpdateInternalBatch(Collection<ExchangeDeal> exchangeDeals, boolean checkExists) throws ConstraintViolationException {
-        var existsKeys = new HashSet<UUID>();
+    private Map<UUID, Long> createExistsMap(SaveConsumerArgument<TypeExchangeDeal> argument) {
+        var existsKeys = new HashMap<UUID, Long>();
 
-        if (checkExists) {
+        if (argument.getCheckExist()) {
             // Получаем имеющиеся элементы
-            var uuids = exchangeDeals.stream().map(ExchangeDeal::getGuid).collect(Collectors.toList());
-            Query query = session.createQuery("SELECT e.guid FROM ExchangeDeal e where e.guid in (:guids)").setParameterList("guids", uuids);
+            var uuids = argument.getItems().stream().map(this::getGuid).collect(Collectors.toList());
+            Query query = session.createQuery("SELECT e FROM " + exchangeDealHqlName + " e where e.guid in (:guids)").setParameterList("guids", uuids);
             for (Object o : query.getResultList()) {
-                existsKeys.add(UUID.fromString(o.toString()));
+                TypeExchangeDeal exchangeDeal = parse(o);
+                existsKeys.put(getGuid(exchangeDeal), getId(exchangeDeal));
             }
         }
 
-        var reference = new AtomicReference<ConstraintViolationException>();
+        return existsKeys;
+    }
 
+    protected abstract Long getId(TypeExchangeDeal exchangeDeal);
+
+    protected abstract UUID getGuid(TypeExchangeDeal exchangeDeal);
+
+    protected void saveOrUpdateInternalBatch(SaveConsumerArgument<TypeExchangeDeal> argument) throws HibernateException {
+        var existsMap = createExistsMap(argument);
         sessionDoWithTransaction(session -> {
-            for (ExchangeDeal exchangeDeal : exchangeDeals) {
-                if (existsKeys.contains(exchangeDeal.getGuid())) {
-                    session.update(exchangeDeal);
-                } else {
+            for (TypeExchangeDeal exchangeDeal : argument.getItems()) {
+                Long id = existsMap.get(getGuid(exchangeDeal));
+                setId(exchangeDeal, id);
+                if (id == null) {
                     session.persist(exchangeDeal);
+                } else {
+                    session.update(exchangeDeal);
                 }
             }
+            session.flush();
+        });
+    }
 
-            try {
-                session.flush();
-            } catch (PersistenceException persistenceException) {
-                var cause = persistenceException.getCause();
-                if (cause instanceof ConstraintViolationException) {
-                    reference.set((ConstraintViolationException) cause);
+    protected abstract void setId(TypeExchangeDeal exchangeDeal, Long id);
+
+    protected void saveOrUpdateInternalEach(SaveConsumerArgument<TypeExchangeDeal> argument) throws HibernateException {
+        var existsMap = createExistsMap(argument);
+        sessionDoWithTransaction(session -> {
+            for (TypeExchangeDeal exchangeDeal : argument.getItems()) {
+                var id = existsMap.get(getGuid(exchangeDeal));
+                if (id != null) {
+                    setId(exchangeDeal, id);
+                    session.merge(exchangeDeal);
+                } else {
+                    session.update(exchangeDeal);
                 }
+                session.flush();
             }
         });
-
-        var exception = reference.get();
-        if (exception != null) {
-            throw exception;
-        }
     }
 
     public ExchangeDealStatusType resolve(String code) {
@@ -226,6 +262,15 @@ public class HibernateTestItem extends AbstractTestItem {
     private void loadCache() {
         exchangeDealStatusTypeResolver.initCache();
         personResolver.initCache();
+    }
+
+    public <T> void save(Collection<T> items) {
+        sessionDoWithTransaction(session -> {
+            for (T item : items) {
+                session.save(item);
+            }
+            session.flush();
+        });
     }
 }
 

@@ -5,6 +5,7 @@ import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import pg.hl.test.*;
+import pg.hl.test.hb.IdentityStrategy;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -19,7 +20,7 @@ public class Main {
     public static final class BenchmarkConstants {
         public final static int ForkWarmups = 0;
         public final static int ForkValue = 1;
-        public final static int WarmupIterations = 1;
+        public final static int WarmupIterations = 0;
         public final static int MeasurementIterations = 1;
     }
 
@@ -39,30 +40,45 @@ public class Main {
         private final static Map<CreateTestItemArgument, TestItem> testItems = new HashMap<>();
         private final Queue<RunArgument> runArguments = new LinkedList<>();
 
-        public UploadDealsArgument(){
-            System.out.println("public UploadDealsArgument()");
-        }
-
         @Param({
-                TestItemsCodes.Hibernate.Hikari.Each,
-                TestItemsCodes.Hibernate.Hikari.Batch.Check,
-                TestItemsCodes.Hibernate.Hikari.Batch.NoCheck,
-
-                TestItemsCodes.Hibernate.C3p0.Each,
-                TestItemsCodes.Hibernate.C3p0.Batch.Check,
-                TestItemsCodes.Hibernate.C3p0.Batch.NoCheck,
-
-                TestItemsCodes.StoredProcedure,
+                TestItemsCodes.Hibernate.Hikari.Each.Before,
+//                TestItemsCodes.Hibernate.Hikari.Each.OnException,
+//                TestItemsCodes.Hibernate.Hikari.Batch.Before,
+//                TestItemsCodes.Hibernate.Hikari.Batch.OnException,
+//
+//                TestItemsCodes.Hibernate.C3p0.Each.Before,
+//                TestItemsCodes.Hibernate.C3p0.Each.OnException,
+//                TestItemsCodes.Hibernate.C3p0.Batch.Before,
+//                TestItemsCodes.Hibernate.C3p0.Batch.OnException,
+//
+//                TestItemsCodes.StoredProcedure,
         })
         private String testItemCode;
-        @Param({"Cache", "Database"})
+
+        @Param({
+                "Cache",
+//                "Database"
+        })
         private ResolveStrategy resolveStrategy;
+
+        @Param({
+                "Identity",
+                "Sequence"
+        })
+        private IdentityStrategy identityStrategy;
+
         @Param("1")
         private int packageSize;
-        @Param({"0", "1"})
+
+        @Param({
+                "0",
+//                "1"
+        })
         private int packageSizeExists;
+
         @Param({"5"})
         private int exchangeDealsPersonsSize;
+
         @Param({"5"})
         private int exchangeDealsStatusesSize;
 
@@ -76,7 +92,7 @@ public class Main {
                     * (BenchmarkConstants.WarmupIterations + BenchmarkConstants.MeasurementIterations);
             var createPackageArgument = new CreatePackageArgument(packageSize, packageSizeExists, exchangeDealsPersonsSize, exchangeDealsStatusesSize);
             for (int i = 0; i < size; i++) {
-                runArguments.add(new RunArgument(TestUtils.createPackage(createPackageArgument)));
+                runArguments.add(new RunArgument(TestUtils.createPackage(createPackageArgument), identityStrategy));
             }
         }
 
@@ -94,7 +110,7 @@ public class Main {
         }
 
         public void run() throws Exception {
-            var testItem = getOrCreate(new CreateTestItemArgument(testItemCode, resolveStrategy));
+            var testItem = getOrCreate(new CreateTestItemArgument(testItemCode, resolveStrategy, identityStrategy));
             if (testItem == null) {
                 throw new Exception("testItem == null");
             }

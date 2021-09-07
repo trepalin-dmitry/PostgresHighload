@@ -5,20 +5,26 @@ public final class TestItemsCodes {
 
     public final class Hibernate {
         public final class C3p0 {
-            public final static String Each = "Hibernate - C3p0 - Поэлементно";
+            public final class Each {
+                public final static String Before = "Hibernate - C3p0 - Поэлементно - C предварительной проверкой наличия ";
+                public final static String OnException = "Hibernate - C3p0 - Поэлементно - C проверкой наличия при исключении";
+            }
 
             public final class Batch {
-                public final static String Check = "Hibernate - C3p0 - Пакетно с предварительной проверкой наличия ";
-                public final static String NoCheck = "Hibernate - C3p0 - Пакетно с проверкой наличия при исключении";
+                public final static String Before = "Hibernate - C3p0 - Пакетно с предварительной проверкой наличия ";
+                public final static String OnException = "Hibernate - C3p0 - Пакетно с проверкой наличия при исключении";
             }
         }
 
         public final class Hikari {
-            public final static String Each = "Hibernate - Hikari - Поэлементно";
+            public final class Each {
+                public final static String Before = "Hibernate - Hikari - Поэлементно - C предварительной проверкой наличия ";
+                public final static String OnException = "Hibernate - Hikari - Поэлементно - C проверкой наличия при исключении";
+            }
 
             public final class Batch {
-                public final static String Check = "Hibernate - Hikari - Пакетно с предварительной проверкой наличия ";
-                public final static String NoCheck = "Hibernate - Hikari - Пакетно с проверкой наличия при исключении";
+                public final static String Before = "Hibernate - Hikari - Пакетно с предварительной проверкой наличия ";
+                public final static String OnException = "Hibernate - Hikari - Пакетно с проверкой наличия при исключении";
             }
         }
     }

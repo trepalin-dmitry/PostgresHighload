@@ -1,4 +1,4 @@
-package pg.hl.test.hb.sequence;
+package pg.hl.test.hb.sequence.one;
 
 import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -17,20 +17,22 @@ import java.io.Serializable;
 @Getter
 @Setter
 @Accessors(chain = true)
-@Table(name = "exchangeDealsPersonsSequence")
-@IdClass(ExchangeDealPersonSequence.ExchangeDealPersonId.class)
-public class ExchangeDealPersonSequence {
+@Table(name = "exchangeDealsPersonsSequenceOne")
+@IdClass(ExchangeDealPersonSequenceOne.ExchangeDealPersonId.class)
+@ToString(onlyExplicitlyIncluded = true)
+public class ExchangeDealPersonSequenceOne {
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "exchangeDealId", nullable = false)
     @JsonIgnore
-    private ExchangeDealSequence exchangeDeal;
+    private ExchangeDealSequenceOne exchangeDeal;
 
     @Id
     @ManyToOne
     @JoinColumn(name = "personId", nullable = false)
     @JsonIdentityReference(alwaysAsId = true)
     @JsonProperty("personId")
+    @ToString.Include
     private Person person;
 
     @Column
@@ -39,14 +41,14 @@ public class ExchangeDealPersonSequence {
     @EqualsAndHashCode
     @ToString
     public static class ExchangeDealPersonId implements Serializable {
-        private ExchangeDealSequence exchangeDeal;
+        private ExchangeDealSequenceOne exchangeDeal;
         private Person person;
 
         public ExchangeDealPersonId() {
         }
 
         @SuppressWarnings("unused")
-        public ExchangeDealPersonId(ExchangeDealSequence exchangeDeal, Person person) {
+        public ExchangeDealPersonId(ExchangeDealSequenceOne exchangeDeal, Person person) {
             this();
             this.exchangeDeal = exchangeDeal;
             this.person = person;

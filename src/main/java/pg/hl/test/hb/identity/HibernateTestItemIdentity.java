@@ -32,7 +32,7 @@ public class HibernateTestItemIdentity extends HibernateTestItem<ExchangeDealIde
     }
 
     @Override
-    protected UUID getGuid(ExchangeDealIdentity exchangeDealIdentity) {
+    public UUID getGuid(ExchangeDealIdentity exchangeDealIdentity) {
         return exchangeDealIdentity.getGuid();
     }
 

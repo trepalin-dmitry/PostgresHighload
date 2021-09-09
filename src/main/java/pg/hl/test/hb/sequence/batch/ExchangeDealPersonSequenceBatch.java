@@ -1,4 +1,4 @@
-package pg.hl.test.hb.identity;
+package pg.hl.test.hb.sequence.batch;
 
 import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -17,15 +17,15 @@ import java.io.Serializable;
 @Getter
 @Setter
 @Accessors(chain = true)
-@Table(name = "exchangeDealsPersonsIdentity")
-@IdClass(ExchangeDealPersonIdentity.ExchangeDealPersonId.class)
+@Table(name = "exchangeDealsPersonsSequenceBatch")
+@IdClass(ExchangeDealPersonSequenceBatch.ExchangeDealPersonId.class)
 @ToString(onlyExplicitlyIncluded = true)
-public class ExchangeDealPersonIdentity {
+public class ExchangeDealPersonSequenceBatch {
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "exchangeDealId", nullable = false)
     @JsonIgnore
-    private ExchangeDealIdentity exchangeDeal;
+    private ExchangeDealSequenceBatch exchangeDeal;
 
     @Id
     @ManyToOne
@@ -41,14 +41,14 @@ public class ExchangeDealPersonIdentity {
     @EqualsAndHashCode
     @ToString
     public static class ExchangeDealPersonId implements Serializable {
-        private ExchangeDealIdentity exchangeDeal;
+        private ExchangeDealSequenceBatch exchangeDeal;
         private Person person;
 
         public ExchangeDealPersonId() {
         }
 
         @SuppressWarnings("unused")
-        public ExchangeDealPersonId(ExchangeDealIdentity exchangeDeal, Person person) {
+        public ExchangeDealPersonId(ExchangeDealSequenceBatch exchangeDeal, Person person) {
             this();
             this.exchangeDeal = exchangeDeal;
             this.person = person;

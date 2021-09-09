@@ -1,4 +1,4 @@
-package pg.hl.test.hb.sequence;
+package pg.hl.test.hb.sequence.batch;
 
 import pg.hl.dto.ExchangeDealPersonSource;
 import pg.hl.dto.ExchangeDealSource;
@@ -6,14 +6,14 @@ import pg.hl.dto.ExchangeDealStatusSource;
 import pg.hl.test.hb.HibernateTestItem;
 import pg.hl.test.hb.HibernateTestItemMapper;
 
-public class HibernateTestItemMapperSequence extends HibernateTestItemMapper<ExchangeDealSequence> {
-    protected HibernateTestItemMapperSequence(HibernateTestItem<ExchangeDealSequence> testItem) {
+public class HibernateTestItemMapperSequenceBatch extends HibernateTestItemMapper<ExchangeDealSequenceBatch> {
+    protected HibernateTestItemMapperSequenceBatch(HibernateTestItem<ExchangeDealSequenceBatch> testItem) {
         super(testItem);
     }
 
     @Override
-    protected ExchangeDealSequence parse(ExchangeDealSource source) {
-        return new ExchangeDealSequence().setGuid(source.getGuid())
+    protected ExchangeDealSequenceBatch parse(ExchangeDealSource source) {
+        return new ExchangeDealSequenceBatch().setGuid(source.getGuid())
                 .setAccountGUId(source.getAccountGUId())
                 .setTypeCode(source.getTypeCode())
                 .setDirectionCode(source.getDirectionCode())
@@ -34,16 +34,16 @@ public class HibernateTestItemMapperSequence extends HibernateTestItemMapper<Exc
                 .addStatusesAll(parse(source.getStatuses(), this::parse));
     }
 
-    private ExchangeDealStatusSequence parse(ExchangeDealStatusSource source) {
-        return new ExchangeDealStatusSequence()
+    private ExchangeDealStatusSequenceBatch parse(ExchangeDealStatusSource source) {
+        return new ExchangeDealStatusSequenceBatch()
                 .setComment(source.getComment())
                 .setDateTime(source.getDateTime())
                 .setIndex(source.getIndex())
                 .setType(getTestItem().resolve(source.getTypeCode()));
     }
 
-    private ExchangeDealPersonSequence parse(ExchangeDealPersonSource source) {
-        return new ExchangeDealPersonSequence()
+    private ExchangeDealPersonSequenceBatch parse(ExchangeDealPersonSource source) {
+        return new ExchangeDealPersonSequenceBatch()
                 .setComment(source.getComment())
                 .setPerson(getTestItem().resolve(source.getPersonGUId()));
     }

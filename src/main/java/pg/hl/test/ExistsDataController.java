@@ -1,33 +1,45 @@
 package pg.hl.test;
 
+import pg.hl.DevException;
 import pg.hl.test.hb.common.ExchangeDealStatusType;
 import pg.hl.test.hb.common.Person;
 
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class ExistsDataController {
-    private static final Integer personsSize = 1000;
-    private static final Integer statusesSize = 100;
+    private static final Integer PERSONS_SIZE = 1000;
+    private static final Integer STATUSES_SIZE = 100;
+    private static final Integer MAX_RANDOM_COUNT = 100;
 
-    private static final List<UUID> existsDealsGUIds = new ArrayList<>();
-    private static final Map<UUID, Integer> persons = new HashMap<>();
-    private static UUID[] personsGuids = new UUID[0];
-    private static final Map<String, Character> statusesTypes = new HashMap<>();
-    private static String[] statusesTypesCodes = new String[0];
     private static final Random RANDOM = new Random();
-    private static boolean inited = false;
+    private static final Map<IdentityStrategy, ExistsDataController> controllers = new HashMap<>();
 
-    public static void init() throws Exception {
-        if (inited) {
-            return;
+    private final Map<Object, Set<Object>> usedRandomValuesRepository = new HashMap<>();
+    private final IdentityStrategy identityStrategy;
+    private final List<UUID> existsDealsGUIds = new ArrayList<>();
+    private final Map<UUID, Integer> persons = new HashMap<>();
+    private final UUID[] personsGuids;
+    private final Map<String, Character> statusesTypes = new HashMap<>();
+    private final String[] statusesTypesCodes;
+
+    public static ExistsDataController getOrCreate(IdentityStrategy identityStrategy) throws SQLException, DevException {
+        var result = controllers.get(identityStrategy);
+        if (result == null) {
+            result = new ExistsDataController(identityStrategy);
+            controllers.put(identityStrategy, result);
         }
+        return result;
+    }
 
-        try (var defaultTestItem = TestUtils.createDefaultTestItem()) {
+    private ExistsDataController(IdentityStrategy identityStrategy) throws SQLException, DevException {
+        this.identityStrategy = identityStrategy;
+        try (var defaultTestItem = TestUtils.createDefaultTestItem(identityStrategy)) {
             var sourcePersons = defaultTestItem.findPersons(Integer.MAX_VALUE);
             if (sourcePersons.size() == 0) {
-                sourcePersons = TestUtils.EASY_RANDOM.objects(Person.class, personsSize).collect(Collectors.toList());
+                sourcePersons = TestUtils.EASY_RANDOM.objects(Person.class, PERSONS_SIZE).collect(Collectors.toList());
                 defaultTestItem.save(sourcePersons);
             }
 
@@ -37,12 +49,15 @@ public class ExistsDataController {
 
             personsGuids = persons.keySet().toArray(new UUID[0]);
             if (personsGuids.length <= 0) {
-                throw new Exception("Персоны отсутствуют в БД!");
+                throw new DevException("Персоны отсутствуют в БД!");
             }
 
             var sourceStatusesTypes = defaultTestItem.findStatusesTypes(Integer.MAX_VALUE);
             if (sourceStatusesTypes.size() == 0) {
-                sourceStatusesTypes = TestUtils.EASY_RANDOM.objects(ExchangeDealStatusType.class, statusesSize).collect(Collectors.toList());
+                var index = new AtomicInteger(65);
+                sourceStatusesTypes = TestUtils.EASY_RANDOM.objects(ExchangeDealStatusType.class, STATUSES_SIZE)
+                        .peek(p -> p.setId((char) index.getAndIncrement()))
+                        .collect(Collectors.toList());
                 defaultTestItem.save(sourceStatusesTypes);
             }
 
@@ -52,46 +67,50 @@ public class ExistsDataController {
 
             statusesTypesCodes = statusesTypes.keySet().toArray(new String[0]);
             if (statusesTypesCodes.length <= 0) {
-                throw new Exception("Статусы отсутствуют в БД!");
+                throw new DevException("Статусы отсутствуют в БД!");
             }
         }
-
-        inited = true;
     }
 
-    public static void populateDeals(int dealsSize) throws SQLException {
+    public void populateDeals(int dealsSize) throws SQLException, DevException {
         if (dealsSize > existsDealsGUIds.size()) {
             existsDealsGUIds.clear();
-            try (var item = TestUtils.createDefaultTestItem()) {
-                var deals = item.findDeals(dealsSize);
-                for (var deal : deals) {
-                    existsDealsGUIds.add(deal.getGuid());
-                }
+            try (var item = TestUtils.createDefaultTestItem(identityStrategy)) {
+                existsDealsGUIds.addAll(item.findDealsGUIds(dealsSize));
             }
         }
     }
 
-    public static UUID getDealGuid(int index) {
+    public UUID getDealGuid(int index) {
         return existsDealsGUIds.get(index);
     }
 
-    public static UUID getRandomPersonGuid() {
-        return getRandomItem(personsGuids);
+    public UUID getRandomPersonGuid(Object uniqueKey) {
+        return getRandomItem(personsGuids, uniqueKey);
     }
 
-    public static String getRandomStatusCode() {
-        return getRandomItem(statusesTypesCodes);
+    public String getRandomStatusCode(Object uniqueKey) {
+        return getRandomItem(statusesTypesCodes, uniqueKey);
     }
 
-    public static Character resolveStatusType(String code) {
+    public Character resolveStatusType(String code) {
         return statusesTypes.get(code);
     }
 
-    public static Integer resolvePerson(UUID guid) {
+    public Integer resolvePerson(UUID guid) {
         return persons.get(guid);
     }
 
-    private static <T> T getRandomItem(T[] source) {
-        return source[RANDOM.nextInt(source.length - 1)];
+    private <T> T getRandomItem(T[] source, Object uniqueKey) throws DevException {
+        Set<Object> usedRandomValues = usedRandomValuesRepository.computeIfAbsent(uniqueKey, k -> new HashSet<>());
+
+        for (int i = 0; i < MAX_RANDOM_COUNT; i++) {
+            T result = source[RANDOM.nextInt(source.length - 1)];
+            if (usedRandomValues.add(result)){
+                return result;
+            }
+        }
+
+        throw new DevException("Не удалось получить случайное уникальное значение");
     }
 }

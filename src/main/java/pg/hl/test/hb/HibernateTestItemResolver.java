@@ -39,6 +39,23 @@ public abstract class HibernateTestItemResolver<TEntity, TKeyInternal, TKeyExter
         }
     }
 
+    public void cleanupCache() {
+        switch (resolveStrategy) {
+            case Cache:
+                return;
+            case Database:
+                break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + resolveStrategy);
+        }
+
+        for (TEntity value : cache.values()) {
+            session.detach(value);
+        }
+
+        cache.clear();
+    }
+
     public TEntity resolve(TKeyExternal keyExternal) {
         switch (resolveStrategy) {
             case Cache:

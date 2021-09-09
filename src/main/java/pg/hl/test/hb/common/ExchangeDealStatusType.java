@@ -1,6 +1,6 @@
 package pg.hl.test.hb.common;
 
-import lombok.Getter;
+import lombok.*;
 import lombok.experimental.Accessors;
 
 import javax.persistence.Column;
@@ -9,12 +9,15 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
-@Getter
 @Accessors(chain = true)
+@Getter
+@Setter
+@ToString(onlyExplicitlyIncluded = true)
 @Table(name = "exchangeDealsStatusesTypes")
 public class ExchangeDealStatusType {
     @Id
     @Column
+    @ToString.Include
     private Character id;
 
     @Column(unique = true)

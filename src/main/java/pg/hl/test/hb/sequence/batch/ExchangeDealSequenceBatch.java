@@ -1,4 +1,4 @@
-package pg.hl.test.hb.sequence;
+package pg.hl.test.hb.sequence.batch;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -20,24 +20,26 @@ import java.util.function.BiConsumer;
 @Getter
 @Setter
 @Accessors(chain = true)
-@Table(name = "exchangeDealsSequence")
-@ToString(callSuper = true)
-public class ExchangeDealSequence {
-    private static final String SEQUENCE_NAME = "exchange_deals_sequence_id_seq";
+@Table(name = "exchangeDealsSequenceBatch")
+@ToString(onlyExplicitlyIncluded = true)
+public class ExchangeDealSequenceBatch {
+    private static final String SEQUENCE_NAME = "exchange_deals_sequence_batch_id_seq";
 
     /**
      * ID объекта
      */
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = SEQUENCE_NAME)
-    @SequenceGenerator(name = SEQUENCE_NAME, sequenceName = SEQUENCE_NAME)
+    @SequenceGenerator(name = SEQUENCE_NAME, sequenceName = SEQUENCE_NAME, allocationSize = 100)
     @Column(nullable = false)
+    @ToString.Include
     private Long id;
 
     /**
      * GUID объекта
      */
     @Column(columnDefinition = "uuid", unique = true, nullable = false)
+    @ToString.Include
     private UUID guid;
 
     /**
@@ -140,25 +142,25 @@ public class ExchangeDealSequence {
     @Getter(value = AccessLevel.NONE)
     @Setter(value = AccessLevel.NONE)
     @ToString.Exclude
-    private List<ExchangeDealPersonSequence> exchangeDealPersons = new ArrayList<>();
+    private List<ExchangeDealPersonSequenceBatch> exchangeDealPersons = new ArrayList<>();
 
     @OneToMany(mappedBy = "exchangeDeal", cascade = CascadeType.ALL, orphanRemoval = true)
     @Getter(value = AccessLevel.NONE)
     @Setter(value = AccessLevel.NONE)
     @ToString.Exclude
-    private List<ExchangeDealStatusSequence> exchangeDealStatuses = new ArrayList<>();
+    private List<ExchangeDealStatusSequenceBatch> exchangeDealStatuses = new ArrayList<>();
 
-    public ExchangeDealSequence addPersonsAll(Collection<ExchangeDealPersonSequence> exchangeDealPersons) {
-        addAllInternal(exchangeDealPersons, this.exchangeDealPersons, ExchangeDealPersonSequence::setExchangeDeal);
+    public ExchangeDealSequenceBatch addPersonsAll(Collection<ExchangeDealPersonSequenceBatch> exchangeDealPersons) {
+        addAllInternal(exchangeDealPersons, this.exchangeDealPersons, ExchangeDealPersonSequenceBatch::setExchangeDeal);
         return this;
     }
 
-    public ExchangeDealSequence addStatusesAll(Collection<ExchangeDealStatusSequence> exchangeDealStatuses) {
-        addAllInternal(exchangeDealStatuses, this.exchangeDealStatuses, ExchangeDealStatusSequence::setExchangeDeal);
+    public ExchangeDealSequenceBatch addStatusesAll(Collection<ExchangeDealStatusSequenceBatch> exchangeDealStatuses) {
+        addAllInternal(exchangeDealStatuses, this.exchangeDealStatuses, ExchangeDealStatusSequenceBatch::setExchangeDeal);
         return this;
     }
 
-    protected <T> void addAllInternal(Collection<T> from, Collection<T> to, BiConsumer<T, ExchangeDealSequence> consumer) {
+    protected <T> void addAllInternal(Collection<T> from, Collection<T> to, BiConsumer<T, ExchangeDealSequenceBatch> consumer) {
         to.addAll(from);
         for (T item : from) {
             consumer.accept(item, this);

@@ -8,7 +8,8 @@ import pg.hl.dto.ExchangeDealStatusSource;
 import pg.hl.dto.ExchangeDealsPackage;
 import pg.hl.test.hb.*;
 import pg.hl.test.hb.identity.HibernateTestItemIdentity;
-import pg.hl.test.hb.sequence.HibernateTestItemSequence;
+import pg.hl.test.hb.sequence.batch.HibernateTestItemSequenceBatch;
+import pg.hl.test.hb.sequence.one.HibernateTestItemSequenceOne;
 import pg.hl.test.sp.StoredProcedureTestItem;
 
 import java.sql.SQLException;
@@ -27,11 +28,13 @@ public class TestUtils {
     }
 
     public static ExchangeDealsPackage createPackage(CreatePackageArgument argument) throws SQLException {
+        ExistsDataController existsDataController = ExistsDataController.getOrCreate(argument.getIdentityStrategy());
+
         var exchangeDealSourceList = EASY_RANDOM
                 .objects(ExchangeDealSource.class, argument.getSize())
                 .peek(exchangeDealSource -> exchangeDealSource.getPersons().addAll(
                         EASY_RANDOM.objects(ExchangeDealPersonSource.class, argument.getPersonsSize())
-                                .peek(exchangeDealPersonSource -> exchangeDealPersonSource.setPersonGUId(ExistsDataController.getRandomPersonGuid()))
+                                .peek(exchangeDealPersonSource -> exchangeDealPersonSource.setPersonGUId(existsDataController.getRandomPersonGuid(exchangeDealSource.getGuid())))
                                 .collect(Collectors.toList())))
                 .peek(exchangeDealSource -> {
                     AtomicInteger index = new AtomicInteger(1);
@@ -39,7 +42,7 @@ public class TestUtils {
                             EASY_RANDOM.objects(ExchangeDealStatusSource.class, argument.getStatusesSize())
                                     .peek(exchangeDealStatusSource -> {
                                         exchangeDealStatusSource.setIndex(index.getAndIncrement());
-                                        exchangeDealStatusSource.setTypeCode(ExistsDataController.getRandomStatusCode());
+                                        exchangeDealStatusSource.setTypeCode(existsDataController.getRandomStatusCode(exchangeDealSource.getGuid()));
                                     })
                                     .collect(Collectors.toList())
                     );
@@ -47,16 +50,16 @@ public class TestUtils {
                 .collect(Collectors.toList());
 
         // Устанавливаем имеющиеся GUId
-        ExistsDataController.populateDeals(argument.getSizeExists());
+        existsDataController.populateDeals(argument.getSizeExists());
         for (int i = 0; i < argument.getSizeExists(); i++) {
-            exchangeDealSourceList.get(i).setGuid(ExistsDataController.getDealGuid(i));
+            exchangeDealSourceList.get(i).setGuid(existsDataController.getDealGuid(i));
         }
 
         return new ExchangeDealsPackage(exchangeDealSourceList);
     }
 
-    public static HibernateTestItemIdentity createDefaultTestItem() throws SQLException {
-        return (HibernateTestItemIdentity) createTestItem(new CreateTestItemArgument(TestItemsCodes.Hibernate.Hikari.Each.Before, ResolveStrategy.Cache, IdentityStrategy.Identity));
+    public static HibernateTestItem<?> createDefaultTestItem(IdentityStrategy identityStrategy) throws SQLException {
+        return (HibernateTestItem<?>) createTestItem(new CreateTestItemArgument(TestItemsCodes.Hibernate.Hikari.Min.Before, ResolveStrategy.Cache, identityStrategy));
     }
 
     public static TestItem createTestItem(CreateTestItemArgument argument) throws SQLException {
@@ -64,23 +67,23 @@ public class TestUtils {
             case TestItemsCodes.StoredProcedure:
                 return new StoredProcedureTestItem(argument);
 
-            case TestItemsCodes.Hibernate.C3p0.Each.OnException:
-                return createHibernateTestItem(new CreateHibernateTestItemArgument(argument, ConnectionPoolType.C3p0, SaveStrategy.Each, CheckExistsStrategy.OnException));
-            case TestItemsCodes.Hibernate.C3p0.Each.Before:
-                return createHibernateTestItem(new CreateHibernateTestItemArgument(argument, ConnectionPoolType.C3p0, SaveStrategy.Each, CheckExistsStrategy.Before));
-            case TestItemsCodes.Hibernate.C3p0.Batch.OnException:
-                return createHibernateTestItem(new CreateHibernateTestItemArgument(argument, ConnectionPoolType.C3p0, SaveStrategy.Batch, CheckExistsStrategy.OnException));
-            case TestItemsCodes.Hibernate.C3p0.Batch.Before:
-                return createHibernateTestItem(new CreateHibernateTestItemArgument(argument, ConnectionPoolType.C3p0, SaveStrategy.Batch, CheckExistsStrategy.Before));
+            case TestItemsCodes.Hibernate.C3p0.Min.OnException:
+                return createHibernateTestItem(new CreateHibernateTestItemArgument(argument, ConnectionPoolType.C3p0, BatchSize.Min, CheckExistsStrategy.OnException));
+            case TestItemsCodes.Hibernate.C3p0.Min.Before:
+                return createHibernateTestItem(new CreateHibernateTestItemArgument(argument, ConnectionPoolType.C3p0, BatchSize.Min, CheckExistsStrategy.Before));
+            case TestItemsCodes.Hibernate.C3p0.Max.OnException:
+                return createHibernateTestItem(new CreateHibernateTestItemArgument(argument, ConnectionPoolType.C3p0, BatchSize.Max, CheckExistsStrategy.OnException));
+            case TestItemsCodes.Hibernate.C3p0.Max.Before:
+                return createHibernateTestItem(new CreateHibernateTestItemArgument(argument, ConnectionPoolType.C3p0, BatchSize.Max, CheckExistsStrategy.Before));
 
-            case TestItemsCodes.Hibernate.Hikari.Each.OnException:
-                return createHibernateTestItem(new CreateHibernateTestItemArgument(argument, ConnectionPoolType.Hikari, SaveStrategy.Each, CheckExistsStrategy.OnException));
-            case TestItemsCodes.Hibernate.Hikari.Each.Before:
-                return createHibernateTestItem(new CreateHibernateTestItemArgument(argument, ConnectionPoolType.Hikari, SaveStrategy.Each, CheckExistsStrategy.Before));
-            case TestItemsCodes.Hibernate.Hikari.Batch.OnException:
-                return createHibernateTestItem(new CreateHibernateTestItemArgument(argument, ConnectionPoolType.Hikari, SaveStrategy.Batch, CheckExistsStrategy.OnException));
-            case TestItemsCodes.Hibernate.Hikari.Batch.Before:
-                return createHibernateTestItem(new CreateHibernateTestItemArgument(argument, ConnectionPoolType.Hikari, SaveStrategy.Batch, CheckExistsStrategy.Before));
+            case TestItemsCodes.Hibernate.Hikari.Min.OnException:
+                return createHibernateTestItem(new CreateHibernateTestItemArgument(argument, ConnectionPoolType.Hikari, BatchSize.Min, CheckExistsStrategy.OnException));
+            case TestItemsCodes.Hibernate.Hikari.Min.Before:
+                return createHibernateTestItem(new CreateHibernateTestItemArgument(argument, ConnectionPoolType.Hikari, BatchSize.Min, CheckExistsStrategy.Before));
+            case TestItemsCodes.Hibernate.Hikari.Max.OnException:
+                return createHibernateTestItem(new CreateHibernateTestItemArgument(argument, ConnectionPoolType.Hikari, BatchSize.Max, CheckExistsStrategy.OnException));
+            case TestItemsCodes.Hibernate.Hikari.Max.Before:
+                return createHibernateTestItem(new CreateHibernateTestItemArgument(argument, ConnectionPoolType.Hikari, BatchSize.Max, CheckExistsStrategy.Before));
 
             default:
                 throw new IllegalStateException("Unexpected value: " + argument.getCode());
@@ -91,17 +94,12 @@ public class TestUtils {
         switch (argument.getParentArgument().getIdentityStrategy()) {
             case Identity:
                 return new HibernateTestItemIdentity(argument);
-            case Sequence:
-                return new HibernateTestItemSequence(argument);
+            case SequenceOne:
+                return new HibernateTestItemSequenceOne(argument);
+            case SequenceBatch:
+                return new HibernateTestItemSequenceBatch(argument);
             default:
                 throw new IllegalStateException("Unexpected value: " + argument.getParentArgument().getIdentityStrategy());
         }
     }
-
-    public static void main(String[] args) throws SQLException {
-        try (var item = createDefaultTestItem()) {
-            item.findDeals(1);
-        }
-    }
 }
-

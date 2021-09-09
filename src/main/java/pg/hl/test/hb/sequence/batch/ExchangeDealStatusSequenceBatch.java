@@ -1,4 +1,4 @@
-package pg.hl.test.hb.identity;
+package pg.hl.test.hb.sequence.batch;
 
 import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -18,15 +18,15 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Accessors(chain = true)
-@Table(name = "exchangeDealsStatusesIdentity")
-@IdClass(ExchangeDealStatusIdentity.ExchangeDealStatusId.class)
+@Table(name = "exchangeDealsStatusesSequenceBatch")
+@IdClass(ExchangeDealStatusSequenceBatch.ExchangeDealStatusId.class)
 @ToString(onlyExplicitlyIncluded = true)
-public class ExchangeDealStatusIdentity {
+public class ExchangeDealStatusSequenceBatch {
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "exchangeDealId", nullable = false)
     @JsonIgnore
-    private ExchangeDealIdentity exchangeDeal;
+    private ExchangeDealSequenceBatch exchangeDeal;
 
     @Id
     @Column(nullable = false)
@@ -47,14 +47,14 @@ public class ExchangeDealStatusIdentity {
 
     @EqualsAndHashCode
     public static class ExchangeDealStatusId implements Serializable {
-        private ExchangeDealIdentity exchangeDeal;
+        private ExchangeDealSequenceBatch exchangeDeal;
         private int index;
 
         public ExchangeDealStatusId() {
         }
 
         @SuppressWarnings("unused")
-        public ExchangeDealStatusId(ExchangeDealIdentity exchangeDeal, int index) {
+        public ExchangeDealStatusId(ExchangeDealSequenceBatch exchangeDeal, int index) {
             this();
             this.exchangeDeal = exchangeDeal;
             this.index = index;

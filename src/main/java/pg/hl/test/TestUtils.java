@@ -10,7 +10,8 @@ import pg.hl.test.hb.*;
 import pg.hl.test.hb.identity.HibernateTestItemIdentity;
 import pg.hl.test.hb.sequence.batch.HibernateTestItemSequenceBatch;
 import pg.hl.test.hb.sequence.one.HibernateTestItemSequenceOne;
-import pg.hl.test.sp.StoredProcedureTestItem;
+import pg.hl.test.sp.bulk.StoredProcedureCopyTestItem;
+import pg.hl.test.sp.json.StoredProcedureJsonTestItem;
 
 import java.sql.SQLException;
 import java.util.Random;
@@ -64,8 +65,10 @@ public class TestUtils {
 
     public static TestItem createTestItem(CreateTestItemArgument argument) throws SQLException {
         switch (argument.getCode()) {
-            case TestItemsCodes.StoredProcedure:
-                return new StoredProcedureTestItem(argument);
+            case TestItemsCodes.StoredProcedure.Json:
+                return new StoredProcedureJsonTestItem(argument);
+            case TestItemsCodes.StoredProcedure.Bulk:
+                return new StoredProcedureCopyTestItem(argument);
 
             case TestItemsCodes.Hibernate.C3p0.Min.OnException:
                 return createHibernateTestItem(new CreateHibernateTestItemArgument(argument, ConnectionPoolType.C3p0, BatchSize.Min, CheckExistsStrategy.OnException));

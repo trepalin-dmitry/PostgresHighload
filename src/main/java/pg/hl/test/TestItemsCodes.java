@@ -1,7 +1,10 @@
 package pg.hl.test;
 
 public final class TestItemsCodes {
-    public final static String StoredProcedure = "Хранимая процедура";
+    public final static class StoredProcedure{
+        public final static String Json = "Хранимая процедура - JSON";
+        public final static String Bulk = "Хранимая процедура - PgBulkInsert";
+    }
 
     public static final class Hibernate {
         public static final class C3p0 {

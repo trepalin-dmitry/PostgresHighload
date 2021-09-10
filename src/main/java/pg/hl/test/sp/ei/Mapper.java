@@ -1,4 +1,4 @@
-package pg.hl.test.sp;
+package pg.hl.test.sp.ei;
 
 import pg.hl.dto.ExchangeDealPersonSource;
 import pg.hl.dto.ExchangeDealSource;
@@ -6,9 +6,6 @@ import pg.hl.dto.ExchangeDealStatusSource;
 import pg.hl.dto.ExchangeDealsPackage;
 import pg.hl.test.ExistsDataController;
 import pg.hl.test.IdentityStrategy;
-import pg.hl.test.sp.ei.ExchangeDealInternal;
-import pg.hl.test.sp.ei.ExchangeDealPersonInternal;
-import pg.hl.test.sp.ei.ExchangeDealStatusInternal;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -16,10 +13,10 @@ import java.util.Collection;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class StoredProcedureTestItemMapper {
+public class Mapper {
     private final ExistsDataController existsDataController;
 
-    protected StoredProcedureTestItemMapper(IdentityStrategy identityStrategy) throws SQLException {
+    public Mapper(IdentityStrategy identityStrategy) throws SQLException {
         this.existsDataController = ExistsDataController.getOrCreate(identityStrategy);
     }
 
@@ -55,13 +52,13 @@ public class StoredProcedureTestItemMapper {
                 .setComment(source.getComment())
                 .setDateTime(source.getDateTime())
                 .setIndex(source.getIndex())
-                .setTypeId(existsDataController.resolveStatusType(source.getTypeCode()));
+                .setTypeId(existsDataController.resolveStatusTypeId(source.getTypeCode()));
     }
 
     private ExchangeDealPersonInternal parse(ExchangeDealPersonSource source) {
         return new ExchangeDealPersonInternal()
                 .setComment(source.getComment())
-                .setPersonId(existsDataController.resolvePerson(source.getPersonGUId()));
+                .setPersonId(existsDataController.resolvePersonId(source.getPersonGUId()));
     }
 
     public Collection<ExchangeDealInternal> parse(ExchangeDealsPackage exchangeDealsPackage) {

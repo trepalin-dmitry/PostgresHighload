@@ -93,11 +93,11 @@ public class ExistsDataController {
         return getRandomItem(statusesTypesCodes, uniqueKey);
     }
 
-    public Character resolveStatusType(String code) {
+    public Character resolveStatusTypeId(String code) {
         return statusesTypes.get(code);
     }
 
-    public Integer resolvePerson(UUID guid) {
+    public Integer resolvePersonId(UUID guid) {
         return persons.get(guid);
     }
 

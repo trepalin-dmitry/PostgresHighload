@@ -91,7 +91,8 @@ public class Main {
 
         @Setter
         @Param({
-                TestItemsCodes.StoredProcedure,
+                TestItemsCodes.StoredProcedure.Json,
+                TestItemsCodes.StoredProcedure.Bulk,
 
                 TestItemsCodes.Hibernate.C3p0.Min.Before,
                 TestItemsCodes.Hibernate.C3p0.Min.OnException,
@@ -196,4 +197,3 @@ public class Main {
                 .collect(Collectors.toList());
     }
 }
-

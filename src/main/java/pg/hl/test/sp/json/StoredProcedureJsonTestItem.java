@@ -1,4 +1,4 @@
-package pg.hl.test.sp;
+package pg.hl.test.sp.json;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,6 +8,7 @@ import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import pg.hl.dto.ExchangeDealsPackage;
 import pg.hl.test.AbstractTestItem;
 import pg.hl.test.CreateTestItemArgument;
+import pg.hl.test.sp.ei.Mapper;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
@@ -15,11 +16,10 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Collection;
 
-public class
-StoredProcedureTestItem extends AbstractTestItem {
+public class StoredProcedureJsonTestItem extends AbstractTestItem {
     private final CreateTestItemArgument argument;
     private static final ObjectMapper objectMapper = new Jackson2ObjectMapperBuilder().build();
-    private final StoredProcedureTestItemMapper mapper;
+    private final Mapper mapper;
 
     static {
         objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
@@ -27,14 +27,14 @@ StoredProcedureTestItem extends AbstractTestItem {
 
     private final CallableStatement callableStatement;
 
-    public StoredProcedureTestItem(CreateTestItemArgument argument) throws SQLException {
+    public StoredProcedureJsonTestItem(CreateTestItemArgument argument) throws SQLException {
         this.argument = argument;
         String url = "jdbc:postgresql://localhost/postgresHighLoad?user=postgres&password=postgres";
         Connection connection = DriverManager.getConnection(url);
         connection.setAutoCommit(true);
         String sql = String.join("", "CALL public.\"exchangeDeals@Save." + argument.getResolveStrategy() + "." + argument.getIdentityStrategy() + "\"(?, ?);");
         callableStatement = connection.prepareCall(sql);
-        this.mapper = new StoredProcedureTestItemMapper(argument.getIdentityStrategy());
+        this.mapper = new Mapper(argument.getIdentityStrategy());
     }
 
     @Override
@@ -62,4 +62,5 @@ StoredProcedureTestItem extends AbstractTestItem {
         callableStatement.close();
     }
 }
+
 

@@ -17,11 +17,6 @@ import java.util.UUID;
 @Accessors(chain = true)
 public class ExchangeDealInternal {
     /**
-     * ID объекта
-     */
-    private Long id;
-
-    /**
      * GUID объекта
      */
     private UUID guid;

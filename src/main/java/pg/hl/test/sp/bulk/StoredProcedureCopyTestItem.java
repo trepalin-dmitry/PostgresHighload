@@ -3,6 +3,7 @@ package pg.hl.test.sp.bulk;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import lombok.SneakyThrows;
+import org.postgresql.jdbc.PgConnection;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import pg.hl.dto.ExchangeDealsPackage;
 import pg.hl.test.AbstractTestItem;
@@ -14,56 +15,58 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class StoredProcedureCopyTestItem extends AbstractTestItem {
-    private final CreateTestItemArgument argument;
     private static final ObjectMapper objectMapper = new Jackson2ObjectMapperBuilder().build();
-    private final Mapper mapper;
-    private final BulkUploaderSource bulkUploaderSource;
-    private final BulkUploaderInternal bulkUploaderInternal;
-
+    private final UploadFunction uploadFunction;
 
     static {
         objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     }
 
-    private final CallableStatement callableStatement;
+    private final CallableStatement statementBefore;
+    private final CallableStatement statementAfter;
 
     public StoredProcedureCopyTestItem(CreateTestItemArgument argument) throws SQLException {
-        this.argument = argument;
-        String url = "jdbc:postgresql://localhost/postgresHighLoad?user=postgres&password=postgres";
-        var connection = DriverManager.getConnection(url);
-        connection.setAutoCommit(true);
-        String sql = String.join("", "CALL public.\"exchangeDeals@SaveCopy." + argument.getResolveStrategy() + "." + argument.getIdentityStrategy() + "\"(?, ?);");
-        this.callableStatement = connection.prepareCall(sql);
-        this.mapper = new Mapper(argument.getIdentityStrategy());
+        var url = "jdbc:postgresql://localhost/postgresHighLoad?user=postgres&password=postgres";
+        var connection = DriverManager.getConnection(url).unwrap(PgConnection.class);
 
-        this.bulkUploaderSource = new BulkUploaderSource(connection);
-        this.bulkUploaderInternal = new BulkUploaderInternal(connection);
-    }
-
-    @Override
-    protected void uploadDeals(ExchangeDealsPackage exchangeDealsPackage) throws SQLException {
-        BulkUploader.UploadResult uploadResult;
+        connection.prepareStatement("call \"exchangeDeals@CreateTables." + argument.getResolveStrategy() + "\"();").execute();
+        this.statementBefore = connection.prepareCall("call \"exchangeDeals@CleanupTables." + argument.getResolveStrategy() + "\"();");
+        this.statementAfter = connection.prepareCall("call \"exchangeDeals@SaveCopy." + argument.getResolveStrategy() + "." + argument.getIdentityStrategy() + "\"(?);");
 
         switch (argument.getResolveStrategy()) {
-            case Database:
-                uploadResult = this.bulkUploaderSource.upload(exchangeDealsPackage.getObjects());
-                break;
             case Cache:
-                uploadResult = this.bulkUploaderInternal.upload(mapper.parse(exchangeDealsPackage));
+                var mapper = new Mapper(argument.getIdentityStrategy());
+                var bulkUploaderInternal = new BulkUploaderInternal();
+                uploadFunction = exchangeDealsPackage -> bulkUploaderInternal.upload(connection, mapper.parse(exchangeDealsPackage));
+                break;
+            case Database:
+                var bulkUploaderSource = new BulkUploaderSource();
+                uploadFunction = exchangeDealsPackage -> bulkUploaderSource.upload(connection, exchangeDealsPackage.getObjects());
                 break;
             default:
                 throw new IllegalStateException("Unexpected value: " + argument.getResolveStrategy());
         }
+    }
 
-        callableStatement.setObject(1, uploadResult.getUploadKey());
-        callableStatement.setInt(2, exchangeDealsPackage.size());
-        callableStatement.execute();
+    @Override
+    protected void uploadDeals(ExchangeDealsPackage exchangeDealsPackage) throws SQLException {
+        statementBefore.execute();
+
+        uploadFunction.accept(exchangeDealsPackage);
+
+        statementAfter.setInt(1, exchangeDealsPackage.size());
+        statementAfter.execute();
     }
 
     @SneakyThrows
     @Override
     public void close() {
-        callableStatement.close();
+        statementAfter.close();
+    }
+
+    @FunctionalInterface
+    private interface UploadFunction {
+        void accept(ExchangeDealsPackage exchangeDealsPackage) throws SQLException;
     }
 }
 

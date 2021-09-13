@@ -5,39 +5,27 @@ import pg.hl.dto.ExchangeDealPersonSource;
 import pg.hl.dto.ExchangeDealSource;
 import pg.hl.dto.ExchangeDealStatusSource;
 import pg.hl.test.sp.bulk.ee.ExchangeDealPersonSourceExtended;
-import pg.hl.test.sp.bulk.ee.ExchangeDealSourceExtended;
 import pg.hl.test.sp.bulk.ee.ExchangeDealStatusSourceExtended;
 import pg.hl.test.sp.bulk.mapping.ExchangeDealPersonSourceExtendedMapping;
-import pg.hl.test.sp.bulk.mapping.ExchangeDealSourceExtendedMapping;
+import pg.hl.test.sp.bulk.mapping.ExchangeDealSourceMapping;
 import pg.hl.test.sp.bulk.mapping.ExchangeDealStatusSourceExtendedMapping;
 
-import java.sql.Connection;
 import java.util.Collection;
-import java.util.UUID;
 
-public class BulkUploaderSource extends BulkUploader<ExchangeDealSource, ExchangeDealSourceExtended, ExchangeDealPersonSource, ExchangeDealPersonSourceExtended, ExchangeDealStatusSource, ExchangeDealStatusSourceExtended> {
-    public BulkUploaderSource(Connection connection) {
-        super(connection);
+public class BulkUploaderSource extends BulkUploader<ExchangeDealSource, ExchangeDealPersonSource, ExchangeDealPersonSourceExtended, ExchangeDealStatusSource, ExchangeDealStatusSourceExtended> {
+    @Override
+    protected ExchangeDealPersonSourceExtended extendDealPerson(ExchangeDealPersonSource exchangeDealPersonSource, ExchangeDealSource exchangeDealSource) {
+        return new ExchangeDealPersonSourceExtended(exchangeDealPersonSource, exchangeDealSource);
     }
 
     @Override
-    protected ExchangeDealSourceExtended extendDeal(ExchangeDealSource exchangeDealSource, UUID uuid) {
-        return new ExchangeDealSourceExtended(exchangeDealSource, uuid);
+    protected ExchangeDealStatusSourceExtended extendDealStatus(ExchangeDealStatusSource source, ExchangeDealSource exchangeDealSource) {
+        return new ExchangeDealStatusSourceExtended(source, exchangeDealSource);
     }
 
     @Override
-    protected ExchangeDealPersonSourceExtended extendDealPerson(ExchangeDealPersonSource exchangeDealPersonSource, ExchangeDealSourceExtended exchangeDealSourceExtended) {
-        return new ExchangeDealPersonSourceExtended(exchangeDealPersonSource, exchangeDealSourceExtended);
-    }
-
-    @Override
-    protected ExchangeDealStatusSourceExtended extendDealStatus(ExchangeDealStatusSource source, ExchangeDealSourceExtended exchangeDealSourceExtended) {
-        return new ExchangeDealStatusSourceExtended(source, exchangeDealSourceExtended);
-    }
-
-    @Override
-    protected AbstractMapping<ExchangeDealSourceExtended> createDealMapping() {
-        return new ExchangeDealSourceExtendedMapping();
+    protected AbstractMapping<ExchangeDealSource> createDealMapping() {
+        return new ExchangeDealSourceMapping();
     }
 
     @Override
@@ -51,13 +39,13 @@ public class BulkUploaderSource extends BulkUploader<ExchangeDealSource, Exchang
     }
 
     @Override
-    protected Collection<ExchangeDealPersonSource> getPersons(ExchangeDealSourceExtended exchangeDealSourceExtended) {
-        return exchangeDealSourceExtended.getDeal().getPersons();
+    protected Collection<ExchangeDealPersonSource> getPersons(ExchangeDealSource exchangeDealSourceExtended) {
+        return exchangeDealSourceExtended.getPersons();
     }
 
     @Override
-    protected Collection<ExchangeDealStatusSource> getStatuses(ExchangeDealSourceExtended exchangeDealSourceExtended) {
-        return exchangeDealSourceExtended.getDeal().getStatuses();
+    protected Collection<ExchangeDealStatusSource> getStatuses(ExchangeDealSource exchangeDealSourceExtended) {
+        return exchangeDealSourceExtended.getStatuses();
     }
 }
 

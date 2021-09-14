@@ -14,4 +14,5 @@ public class CreateTestItemArgument {
     private ResolveStrategy resolveStrategy;
     private IdentityStrategy identityStrategy;
     private ConnectionPoolType connectionPoolType;
+    private EntityType entityType;
 }

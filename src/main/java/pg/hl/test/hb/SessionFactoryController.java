@@ -16,15 +16,18 @@ import pg.hl.test.ConnectionPoolType;
 import pg.hl.test.hb.common.ExchangeDealStatusType;
 import pg.hl.test.hb.common.ExchangeDealType;
 import pg.hl.test.hb.common.Person;
-import pg.hl.test.hb.identity.ExchangeDealIdentity;
-import pg.hl.test.hb.identity.ExchangeDealPersonIdentity;
-import pg.hl.test.hb.identity.ExchangeDealStatusIdentity;
-import pg.hl.test.hb.sequence.batch.ExchangeDealPersonSequenceBatch;
-import pg.hl.test.hb.sequence.batch.ExchangeDealSequenceBatch;
-import pg.hl.test.hb.sequence.batch.ExchangeDealStatusSequenceBatch;
-import pg.hl.test.hb.sequence.one.ExchangeDealPersonSequenceOne;
-import pg.hl.test.hb.sequence.one.ExchangeDealSequenceOne;
-import pg.hl.test.hb.sequence.one.ExchangeDealStatusSequenceOne;
+import pg.hl.test.hb.entity.multi.identity.ExchangeDealIdentity;
+import pg.hl.test.hb.entity.multi.identity.ExchangeDealPersonIdentity;
+import pg.hl.test.hb.entity.multi.identity.ExchangeDealStatusIdentity;
+import pg.hl.test.hb.entity.multi.sequence.batch.ExchangeDealPersonSequenceBatch;
+import pg.hl.test.hb.entity.multi.sequence.batch.ExchangeDealSequenceBatch;
+import pg.hl.test.hb.entity.multi.sequence.batch.ExchangeDealStatusSequenceBatch;
+import pg.hl.test.hb.entity.multi.sequence.one.ExchangeDealPersonSequenceOne;
+import pg.hl.test.hb.entity.multi.sequence.one.ExchangeDealSequenceOne;
+import pg.hl.test.hb.entity.multi.sequence.one.ExchangeDealStatusSequenceOne;
+import pg.hl.test.hb.entity.simple.identity.SimpleExchangeDealIdentity;
+import pg.hl.test.hb.entity.simple.sequence.batch.SimpleExchangeDealSequenceBatch;
+import pg.hl.test.hb.entity.simple.sequence.one.SimpleExchangeDealSequenceOne;
 import ru.vtb.zf.common.data.naming.PhysicalNamingStrategyQuotedImpl;
 
 import java.util.HashMap;
@@ -73,6 +76,10 @@ public class SessionFactoryController {
         configuration.addAnnotatedClass(ExchangeDealIdentity.class);
         configuration.addAnnotatedClass(ExchangeDealPersonIdentity.class);
         configuration.addAnnotatedClass(ExchangeDealStatusIdentity.class);
+
+        configuration.addAnnotatedClass(SimpleExchangeDealSequenceOne.class);
+        configuration.addAnnotatedClass(SimpleExchangeDealSequenceBatch.class);
+        configuration.addAnnotatedClass(SimpleExchangeDealIdentity.class);
 
         switch (argument.getConnectionPoolType()) {
             case Hikari:

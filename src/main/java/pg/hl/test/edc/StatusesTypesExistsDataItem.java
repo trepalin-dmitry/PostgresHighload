@@ -1,6 +1,6 @@
 package pg.hl.test.edc;
 
-import pg.hl.test.hb.HibernateTestItem;
+import pg.hl.test.DatabaseHelper;
 import pg.hl.test.hb.common.ExchangeDealStatusType;
 
 import java.util.Collection;
@@ -8,8 +8,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class StatusesTypesExistsDataItem extends ExistsDataItem<ExchangeDealStatusType, Character, String, AtomicInteger> {
 
-    public StatusesTypesExistsDataItem(HibernateTestItem<?, ?, ?> defaultTestItem, int size) {
-        super(defaultTestItem, size, ExchangeDealStatusType.class, String.class);
+    public StatusesTypesExistsDataItem(DatabaseHelper databaseHelper, int size) {
+        super(databaseHelper, size, ExchangeDealStatusType.class, String.class);
     }
 
     @Override
@@ -18,8 +18,8 @@ public class StatusesTypesExistsDataItem extends ExistsDataItem<ExchangeDealStat
     }
 
     @Override
-    protected Collection<ExchangeDealStatusType> getSource(HibernateTestItem<?, ?, ?> defaultTestItem) {
-        return defaultTestItem.findStatusesTypes(Integer.MAX_VALUE);
+    protected Collection<ExchangeDealStatusType> getSource(DatabaseHelper databaseHelper) {
+        return databaseHelper.findStatusesTypes(Integer.MAX_VALUE);
     }
 
     @Override

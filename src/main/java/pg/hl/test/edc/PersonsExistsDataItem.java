@@ -1,6 +1,6 @@
 package pg.hl.test.edc;
 
-import pg.hl.test.hb.HibernateTestItem;
+import pg.hl.test.DatabaseHelper;
 import pg.hl.test.hb.common.Person;
 
 import java.util.Collection;
@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public class PersonsExistsDataItem extends ExistsDataItem<Person, Integer, UUID, Object> {
 
-    public PersonsExistsDataItem(HibernateTestItem<?, ?, ?> defaultTestItem, int size) {
+    public PersonsExistsDataItem(DatabaseHelper defaultTestItem, int size) {
         super(defaultTestItem, size, Person.class, UUID.class);
     }
 
@@ -18,8 +18,8 @@ public class PersonsExistsDataItem extends ExistsDataItem<Person, Integer, UUID,
     }
 
     @Override
-    protected Collection<Person> getSource(HibernateTestItem<?, ?, ?> defaultTestItem) {
-        return defaultTestItem.findPersons(Integer.MAX_VALUE);
+    protected Collection<Person> getSource(DatabaseHelper databaseHelper) {
+        return databaseHelper.findPersons(Integer.MAX_VALUE);
     }
 
     @Override

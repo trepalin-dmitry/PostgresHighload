@@ -7,27 +7,29 @@ import pg.hl.ExceptionsUtils;
 import pg.hl.dto.AbstractDataObject;
 import pg.hl.dto.AbstractDataPackage;
 import pg.hl.test.AbstractTestItem;
+import pg.hl.test.DatabaseHelper;
 import pg.hl.test.hb.common.ExchangeDealStatusType;
 import pg.hl.test.hb.common.ExchangeDealType;
 import pg.hl.test.hb.common.Person;
-import pg.hl.test.hb.identity.HibernateRootEntity;
 import pg.hl.test.hb.resolver.common.ExchangeDealStatusTypeResolver;
 import pg.hl.test.hb.resolver.common.ExchangeDealTypeResolver;
 import pg.hl.test.hb.resolver.common.PersonResolver;
 
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
+import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public abstract class HibernateTestItem<
+public class HibernateTestItem<
         TypePackage extends AbstractDataPackage<TypeExchangeDealSource>,
         TypeExchangeDealSource extends AbstractDataObject,
-        TypeExchangeDealTarget extends HibernateRootEntity
-        > extends AbstractTestItem<TypePackage, TypeExchangeDealSource> implements HibernateResolver {
+        TypeExchangeDealTarget extends HibernateRootEntity,
+        TypeMapper extends HibernateTestItemMapper<TypeExchangeDealSource, TypeExchangeDealTarget>
+        > extends AbstractTestItem<TypePackage, TypeExchangeDealSource> implements HibernateResolver, DatabaseHelper {
 
-    private final HibernateTestItemMapper<TypeExchangeDealSource, TypeExchangeDealTarget> mapper;
+    private final TypeMapper mapper;
     private final Session session;
     private final ExchangeDealStatusTypeResolver exchangeDealStatusTypeResolver;
     private final PersonResolver personResolver;
@@ -36,12 +38,12 @@ public abstract class HibernateTestItem<
     private final String exchangeDealHqlName;
     private final Class<TypeExchangeDealTarget> typeExchangeDealTargetClazz;
 
-    protected HibernateTestItem(Class<TypePackage> typePackageClazz, Class<TypeExchangeDealTarget> typeExchangeDealTargetClazz, CreateHibernateTestItemArgument argument) {
+    public HibernateTestItem(Class<TypePackage> typePackageClazz, Class<TypeExchangeDealTarget> typeExchangeDealTargetClazz, Class<TypeMapper> typeMapperClazz, CreateHibernateTestItemArgument argument) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         super(argument.getParentArgument(), typePackageClazz);
         this.typeExchangeDealTargetClazz = typeExchangeDealTargetClazz;
         this.argument = argument;
         this.exchangeDealHqlName = createExchangeDealHqlName();
-        this.mapper = createMapper();
+        this.mapper = typeMapperClazz.getConstructor(HibernateResolver.class).newInstance(this);
         this.session = createSessionInternal();
         this.exchangeDealStatusTypeResolver = new ExchangeDealStatusTypeResolver(this.argument.getParentArgument().getResolveStrategy(), session);
         this.personResolver = new PersonResolver(this.argument.getParentArgument().getResolveStrategy(), session);
@@ -52,8 +54,6 @@ public abstract class HibernateTestItem<
     private String createExchangeDealHqlName() {
         return typeExchangeDealTargetClazz.getSimpleName();
     }
-
-    protected abstract HibernateTestItemMapper<TypeExchangeDealSource, TypeExchangeDealTarget> createMapper();
 
     @Override
     protected void uploadDeals(TypePackage dealsPackage) {

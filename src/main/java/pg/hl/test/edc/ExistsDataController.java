@@ -2,10 +2,12 @@ package pg.hl.test.edc;
 
 import lombok.Getter;
 import pg.hl.DevException;
+import pg.hl.test.EntityType;
 import pg.hl.test.IdentityStrategy;
 import pg.hl.test.TestUtils;
 
 import java.beans.PropertyVetoException;
+import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -16,6 +18,7 @@ public class ExistsDataController {
 
     private static final Map<IdentityStrategy, ExistsDataController> controllers = new HashMap<>();
     private final IdentityStrategy identityStrategy;
+    private final EntityType entityType;
     private final List<UUID> existsDealsGUIds = new ArrayList<>();
 
     @Getter
@@ -25,35 +28,36 @@ public class ExistsDataController {
     @Getter
     private final DealsTypesExistsDataItem dealsTypes;
 
-    public static ExistsDataController getOrCreate(IdentityStrategy identityStrategy) throws SQLException, DevException, PropertyVetoException {
+    public static ExistsDataController getOrCreate(IdentityStrategy identityStrategy, EntityType entityType) throws SQLException, DevException, PropertyVetoException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         var result = controllers.get(identityStrategy);
         if (result == null) {
-            result = new ExistsDataController(identityStrategy);
+            result = new ExistsDataController(identityStrategy, entityType);
             controllers.put(identityStrategy, result);
         }
         return result;
     }
 
-    private ExistsDataController(IdentityStrategy identityStrategy) throws SQLException, DevException, PropertyVetoException {
+    private ExistsDataController(IdentityStrategy identityStrategy, EntityType entityType) throws SQLException, DevException, PropertyVetoException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         this.identityStrategy = identityStrategy;
-        var defaultTestItem = TestUtils.createDefaultTestItem(identityStrategy);
+        this.entityType = entityType;
+        var databaseHelper = TestUtils.createDatabaseHelper(identityStrategy, entityType);
         try {
-            persons = new PersonsExistsDataItem(defaultTestItem, PERSONS_SIZE);
-            statusesTypes = new StatusesTypesExistsDataItem(defaultTestItem, STATUSES_SIZE);
-            dealsTypes = new DealsTypesExistsDataItem(defaultTestItem, TYPES_SIZE);
+            persons = new PersonsExistsDataItem(databaseHelper, PERSONS_SIZE);
+            statusesTypes = new StatusesTypesExistsDataItem(databaseHelper, STATUSES_SIZE);
+            dealsTypes = new DealsTypesExistsDataItem(databaseHelper, TYPES_SIZE);
         } finally {
-            defaultTestItem.close();
+            databaseHelper.close();
         }
     }
 
-    public void populateDeals(int dealsSize) throws SQLException, DevException, PropertyVetoException {
+    public void populateDeals(int dealsSize) throws SQLException, DevException, PropertyVetoException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         if (dealsSize > existsDealsGUIds.size()) {
             existsDealsGUIds.clear();
-            var item = TestUtils.createDefaultTestItem(identityStrategy);
+            var databaseHelper = TestUtils.createDatabaseHelper(identityStrategy, entityType);
             try {
-                existsDealsGUIds.addAll(item.findDealsGUIds(dealsSize));
+                existsDealsGUIds.addAll(databaseHelper.findDealsGUIds(dealsSize));
             } finally {
-                item.close();
+                databaseHelper.close();
             }
         }
     }

@@ -1,8 +1,8 @@
 package pg.hl.test.edc;
 
 import pg.hl.DevException;
+import pg.hl.test.DatabaseHelper;
 import pg.hl.test.TestUtils;
-import pg.hl.test.hb.HibernateTestItem;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -14,7 +14,7 @@ public abstract class ExistsDataItem<TypeSource, TypeId, TypeCode, TypeInitArgum
     private final Map<TypeCode, TypeId> items = new HashMap<>();
     private final TypeCode[] codes;
 
-    public ExistsDataItem(HibernateTestItem<?, ?, ?> defaultTestItem, int size, Class<TypeSource> typeSourceClazz, Class<TypeCode> typeCodeClazz) {
+    public ExistsDataItem(DatabaseHelper defaultTestItem, int size, Class<TypeSource> typeSourceClazz, Class<TypeCode> typeCodeClazz) {
         var sourceItems = getSource(defaultTestItem);
         if (sourceItems.size() == 0) {
             var argument = createInitArgument();
@@ -36,7 +36,7 @@ public abstract class ExistsDataItem<TypeSource, TypeId, TypeCode, TypeInitArgum
 
     protected abstract TypeCode[] createCodesArray(int size);
 
-    protected abstract Collection<TypeSource> getSource(HibernateTestItem<?, ?, ?> defaultTestItem);
+    protected abstract Collection<TypeSource> getSource(DatabaseHelper databaseHelper);
 
     protected abstract TypeId getId(TypeSource source);
 

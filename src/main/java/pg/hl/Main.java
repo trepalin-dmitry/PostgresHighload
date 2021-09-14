@@ -14,6 +14,7 @@ import pg.hl.test.*;
 
 import java.beans.PropertyVetoException;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -26,7 +27,7 @@ import java.util.stream.Collectors;
 
 public class Main {
 
-    public static void main(String[] args) throws NoSuchFieldException, PropertyVetoException, SQLException, IOException, InterruptedException, RunnerException {
+    public static void main(String[] args) throws NoSuchFieldException, PropertyVetoException, SQLException, IOException, InterruptedException, RunnerException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         if (Settings.BenchmarkConstants.Test) {
             for (String testItemsCode : getParamValues("testItemCode", s -> s)) {
                 for (ConnectionPoolType connectionPoolType : getParamValues("connectionPoolType", ConnectionPoolType::valueOf)) {
@@ -114,7 +115,7 @@ public class Main {
         @Getter
         @Setter
         @Param({
-//                "Simple",
+                "Simple",
                 "Multi",
         })
         private EntityType entityType;
@@ -161,8 +162,8 @@ public class Main {
         private final Integer statusesSize = Settings.BenchmarkConstants.EXCHANGE_DEALS_STATUSES_SIZE;
 
         @Setup(Level.Trial)
-        public void setup() throws PropertyVetoException, SQLException {
-            var argument = new CreateTestItemArgument(this.testItemCode, this.resolveStrategy, this.identityStrategy, this.connectionPoolType);
+        public void setup() throws PropertyVetoException, SQLException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+            var argument = new CreateTestItemArgument(this.testItemCode, this.resolveStrategy, this.identityStrategy, this.connectionPoolType, this.entityType);
             if (!Objects.equals(this.argument, argument)) {
                 closeTestItem();
                 this.testItem = TestUtils.createTestItem(argument);

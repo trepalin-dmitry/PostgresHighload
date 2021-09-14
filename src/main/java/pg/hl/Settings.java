@@ -15,12 +15,12 @@ public final class Settings {
     }
 
     public static final class BenchmarkConstants {
-        public static boolean Test = true;
+        public static boolean Test = false;
 
-        public final static int FORK_WARMUPS = 0;
+        public final static int FORK_WARMUPS = 1;
         public final static int FORK_VALUE = 1;
-        public final static int WARMUP_ITERATIONS = 0;
-        public final static int MEASUREMENT_ITERATIONS = 1;
+        public final static int WARMUP_ITERATIONS = 10;
+        public final static int MEASUREMENT_ITERATIONS = 10;
 
         public static final Integer EXCHANGE_DEALS_PERSONS_SIZE = 5;
         public static final Integer EXCHANGE_DEALS_STATUSES_SIZE = 5;

@@ -1,14 +1,14 @@
 package pg.hl.test.edc;
 
-import pg.hl.test.hb.HibernateTestItem;
+import pg.hl.test.DatabaseHelper;
 import pg.hl.test.hb.common.ExchangeDealType;
 
 import java.util.Collection;
 
 public class DealsTypesExistsDataItem extends ExistsDataItem<ExchangeDealType, Integer, String, Object> {
 
-    public DealsTypesExistsDataItem(HibernateTestItem<?, ?, ?> defaultTestItem, int size) {
-        super(defaultTestItem, size, ExchangeDealType.class, String.class);
+    public DealsTypesExistsDataItem(DatabaseHelper databaseHelper, int size) {
+        super(databaseHelper, size, ExchangeDealType.class, String.class);
     }
 
     @Override
@@ -17,8 +17,8 @@ public class DealsTypesExistsDataItem extends ExistsDataItem<ExchangeDealType, I
     }
 
     @Override
-    protected Collection<ExchangeDealType> getSource(HibernateTestItem<?, ?, ?> defaultTestItem) {
-        return defaultTestItem.findDealsTypes(Integer.MAX_VALUE);
+    protected Collection<ExchangeDealType> getSource(DatabaseHelper databaseHelper) {
+        return databaseHelper.findDealsTypes(Integer.MAX_VALUE);
     }
 
     @Override

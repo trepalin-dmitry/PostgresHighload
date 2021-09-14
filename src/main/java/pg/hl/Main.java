@@ -26,20 +26,8 @@ import java.util.stream.Collectors;
 
 public class Main {
 
-    public static final class BenchmarkConstants {
-        public static boolean Test = true;
-
-        public final static int FORK_WARMUPS = 0;
-        public final static int FORK_VALUE = 1;
-        public final static int WARMUP_ITERATIONS = 0;
-        public final static int MEASUREMENT_ITERATIONS = 1;
-
-        public static final Integer EXCHANGE_DEALS_PERSONS_SIZE = 5;
-        public static final Integer EXCHANGE_DEALS_STATUSES_SIZE = 5;
-    }
-
     public static void main(String[] args) throws NoSuchFieldException, PropertyVetoException, SQLException, IOException, InterruptedException, RunnerException {
-        if (BenchmarkConstants.Test) {
+        if (Settings.BenchmarkConstants.Test) {
             for (String testItemsCode : getParamValues("testItemCode", s -> s)) {
                 for (ConnectionPoolType connectionPoolType : getParamValues("connectionPoolType", ConnectionPoolType::valueOf)) {
                     for (EntityType entityType : getParamValues("entityType", EntityType::valueOf)) {
@@ -47,7 +35,7 @@ public class Main {
                             for (IdentityStrategy identityStrategy : getParamValues("identityStrategy", IdentityStrategy::valueOf)) {
                                 for (Integer packageSize : getParamValues("packageSize", Integer::valueOf)) {
                                     for (Integer packageSizeExist : getParamValues("packageSizeExists", Integer::valueOf)) {
-                                        for (int i = 0; i < (BenchmarkConstants.FORK_WARMUPS + BenchmarkConstants.FORK_VALUE); i++) {
+                                        for (int i = 0; i < (Settings.BenchmarkConstants.FORK_WARMUPS + Settings.BenchmarkConstants.FORK_VALUE); i++) {
                                             var argument = new UploadDealsArgument();
                                             try {
                                                 argument
@@ -62,7 +50,7 @@ public class Main {
                                                 System.out.println("argument = " + argument);
                                                 argument.setup();
                                                 try {
-                                                    for (int j = 0; j < (BenchmarkConstants.WARMUP_ITERATIONS + BenchmarkConstants.MEASUREMENT_ITERATIONS); j++) {
+                                                    for (int j = 0; j < (Settings.BenchmarkConstants.WARMUP_ITERATIONS + Settings.BenchmarkConstants.MEASUREMENT_ITERATIONS); j++) {
                                                         uploadDeals(argument);
                                                     }
                                                 } finally {
@@ -168,9 +156,9 @@ public class Main {
         private Integer packageSizeExists;
 
         @Getter
-        private final Integer personsSize = BenchmarkConstants.EXCHANGE_DEALS_PERSONS_SIZE;
+        private final Integer personsSize = Settings.BenchmarkConstants.EXCHANGE_DEALS_PERSONS_SIZE;
         @Getter
-        private final Integer statusesSize = BenchmarkConstants.EXCHANGE_DEALS_STATUSES_SIZE;
+        private final Integer statusesSize = Settings.BenchmarkConstants.EXCHANGE_DEALS_STATUSES_SIZE;
 
         @Setup(Level.Trial)
         public void setup() throws PropertyVetoException, SQLException {
@@ -182,7 +170,7 @@ public class Main {
             }
 
             // Подготовка пакетов
-            var size = (Main.BenchmarkConstants.WARMUP_ITERATIONS + Main.BenchmarkConstants.MEASUREMENT_ITERATIONS);
+            var size = (Settings.BenchmarkConstants.WARMUP_ITERATIONS + Settings.BenchmarkConstants.MEASUREMENT_ITERATIONS);
             for (int i = 0; i < size; i++) {
                 runArguments.add(new RunArgument(TestUtils.createPackage(this)));
             }
@@ -209,9 +197,9 @@ public class Main {
 
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
-    @Fork(warmups = BenchmarkConstants.FORK_WARMUPS, value = BenchmarkConstants.FORK_VALUE)
-    @Warmup(iterations = BenchmarkConstants.WARMUP_ITERATIONS, time = 1, timeUnit = TimeUnit.NANOSECONDS)
-    @Measurement(iterations = BenchmarkConstants.MEASUREMENT_ITERATIONS, time = 1, timeUnit = TimeUnit.NANOSECONDS)
+    @Fork(warmups = Settings.BenchmarkConstants.FORK_WARMUPS, value = Settings.BenchmarkConstants.FORK_VALUE)
+    @Warmup(iterations = Settings.BenchmarkConstants.WARMUP_ITERATIONS, time = 1, timeUnit = TimeUnit.NANOSECONDS)
+    @Measurement(iterations = Settings.BenchmarkConstants.MEASUREMENT_ITERATIONS, time = 1, timeUnit = TimeUnit.NANOSECONDS)
     public static void uploadDeals(UploadDealsArgument uploadDealsArgument) throws SQLException, DevException, IOException, InterruptedException {
         uploadDealsArgument.run();
     }

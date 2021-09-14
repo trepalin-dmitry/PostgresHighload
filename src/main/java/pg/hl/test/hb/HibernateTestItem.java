@@ -8,14 +8,17 @@ import pg.hl.dto.AbstractDataObject;
 import pg.hl.dto.AbstractDataPackage;
 import pg.hl.test.AbstractTestItem;
 import pg.hl.test.hb.common.ExchangeDealStatusType;
+import pg.hl.test.hb.common.ExchangeDealType;
 import pg.hl.test.hb.common.Person;
 import pg.hl.test.hb.identity.HibernateRootEntity;
+import pg.hl.test.hb.resolver.common.ExchangeDealStatusTypeResolver;
+import pg.hl.test.hb.resolver.common.ExchangeDealTypeResolver;
+import pg.hl.test.hb.resolver.common.PersonResolver;
 
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public abstract class HibernateTestItem<
@@ -28,6 +31,7 @@ public abstract class HibernateTestItem<
     private final Session session;
     private final ExchangeDealStatusTypeResolver exchangeDealStatusTypeResolver;
     private final PersonResolver personResolver;
+    private final ExchangeDealTypeResolver exchangeDealTypeResolver;
     private final CreateHibernateTestItemArgument argument;
     private final String exchangeDealHqlName;
     private final Class<TypeExchangeDealTarget> typeExchangeDealTargetClazz;
@@ -41,6 +45,7 @@ public abstract class HibernateTestItem<
         this.session = createSessionInternal();
         this.exchangeDealStatusTypeResolver = new ExchangeDealStatusTypeResolver(this.argument.getParentArgument().getResolveStrategy(), session);
         this.personResolver = new PersonResolver(this.argument.getParentArgument().getResolveStrategy(), session);
+        this.exchangeDealTypeResolver = new ExchangeDealTypeResolver(this.argument.getParentArgument().getResolveStrategy(), session);
         loadCache();
     }
 
@@ -69,22 +74,26 @@ public abstract class HibernateTestItem<
         return result;
     }
 
-    private TypeExchangeDealTarget cast(Object o){
+    private TypeExchangeDealTarget cast(Object o) {
         return typeExchangeDealTargetClazz.cast(o);
     }
 
     public Collection<Person> findPersons(int maxValue) {
-        return findInternal("From Person", maxValue, o -> (Person) o);
+        return findInternal(Person.class, "From Person", maxValue);
     }
 
     public Collection<ExchangeDealStatusType> findStatusesTypes(int maxValue) {
-        return findInternal("From ExchangeDealStatusType", maxValue, o -> (ExchangeDealStatusType) o);
+        return findInternal(ExchangeDealStatusType.class, "From ExchangeDealStatusType", maxValue);
     }
 
-    public <TEntity> List<TEntity> findInternal(String queryString, int maxValue, Function<Object, TEntity> function) {
+    public Collection<ExchangeDealType> findDealsTypes(int maxValue) {
+        return findInternal(ExchangeDealType.class, "From ExchangeDealType", maxValue);
+    }
+
+    public <TEntity> List<TEntity> findInternal(Class<TEntity> clazz, String queryString, int maxValue) {
         List<TEntity> result = new ArrayList<>();
         for (Object o : session.createQuery(queryString).setMaxResults(maxValue).list()) {
-            result.add(function.apply(o));
+            result.add(clazz.cast(o));
         }
         return result;
     }
@@ -158,15 +167,20 @@ public abstract class HibernateTestItem<
         }
     }
 
-    public ExchangeDealStatusType resolve(String code) {
+    public ExchangeDealType resolveDealType(String code) {
+        return exchangeDealTypeResolver.resolve(code);
+    }
+
+    public ExchangeDealStatusType resolveStatusType(String code) {
         return exchangeDealStatusTypeResolver.resolve(code);
     }
 
-    public Person resolve(UUID guid) {
+    public Person resolvePerson(UUID guid) {
         return personResolver.resolve(guid);
     }
 
     private void loadCache() {
+        exchangeDealTypeResolver.initCache();
         exchangeDealStatusTypeResolver.initCache();
         personResolver.initCache();
     }
@@ -181,6 +195,7 @@ public abstract class HibernateTestItem<
     }
 
     protected void cleanupCache() {
+        exchangeDealTypeResolver.cleanupCache();
         exchangeDealStatusTypeResolver.cleanupCache();
         personResolver.cleanupCache();
     }

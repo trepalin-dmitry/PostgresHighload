@@ -1,12 +1,13 @@
-package pg.hl.test.hb;
+package pg.hl.test.hb.resolver.common;
 
 import org.hibernate.Session;
 import pg.hl.test.ResolveStrategy;
+import pg.hl.test.hb.HibernateTestItemResolverParameters;
 import pg.hl.test.hb.common.Person;
 
 import java.util.UUID;
 
-public class PersonResolver extends HibernateTestItemResolver<Person, Integer, UUID> {
+public class PersonResolver extends CommonEntityResolver<Person, Integer, UUID> {
 
     public PersonResolver(ResolveStrategy resolveStrategy, Session session) {
         super(resolveStrategy, session);
@@ -14,16 +15,11 @@ public class PersonResolver extends HibernateTestItemResolver<Person, Integer, U
 
     @Override
     protected HibernateTestItemResolverParameters<Person, Integer, UUID> createParameters() {
-        return new PersonResolverParameters()
+        return new HibernateTestItemResolverParameters<Person, Integer, UUID>()
                 .setGetKeyExternalFunction(Person::getGuid)
-                .setParseObjectFunction(o -> (Person) o)
+                .setEntityClazz(Person.class)
                 .setHqlAll("SELECT c FROM Person c")
                 .setHqlByKeyExternal("SELECT c FROM Person c WHERE c.guid = :guid")
                 .setHqlByKeyExternalParameterName("guid");
-    }
-
-
-    private static class PersonResolverParameters
-            extends HibernateTestItemResolverParameters<Person, Integer, UUID> {
     }
 }

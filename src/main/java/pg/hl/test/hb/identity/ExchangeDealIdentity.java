@@ -1,10 +1,13 @@
 package pg.hl.test.hb.identity;
 
+import com.fasterxml.jackson.annotation.JsonIdentityReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.Accessors;
+import pg.hl.test.hb.common.ExchangeDealType;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
@@ -49,8 +52,12 @@ public class ExchangeDealIdentity implements HibernateRootEntity {
     /**
      * Тип сделки
      */
-    @Column(nullable = false)
-    private String typeCode;
+    @ManyToOne
+    @JoinColumn(name = "typeId", nullable = false)
+    @JsonIdentityReference(alwaysAsId = true)
+    @JsonProperty("typeId")
+    @ToString.Include
+    private ExchangeDealType type;
 
     /**
      * Направление сделки

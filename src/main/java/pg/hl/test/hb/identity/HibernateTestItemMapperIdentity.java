@@ -15,7 +15,7 @@ public class HibernateTestItemMapperIdentity extends HibernateTestItemMapper<Exc
     protected ExchangeDealIdentity parse(ExchangeDealSource source) {
         return new ExchangeDealIdentity().setGuid(source.getGuid())
                 .setAccountGUId(source.getAccountGUId())
-                .setTypeCode(source.getTypeCode())
+                .setType(getResolver().resolveDealType(source.getTypeCode()))
                 .setDirectionCode(source.getDirectionCode())
                 .setPlaceCode(source.getPlaceCode())
                 .setTradeSessionGUId(source.getTradeSessionGUId())
@@ -39,12 +39,12 @@ public class HibernateTestItemMapperIdentity extends HibernateTestItemMapper<Exc
                 .setComment(source.getComment())
                 .setDateTime(source.getDateTime())
                 .setIndex(source.getIndex())
-                .setType(getResolver().resolve(source.getTypeCode()));
+                .setType(getResolver().resolveStatusType(source.getTypeCode()));
     }
 
     private ExchangeDealPersonIdentity parse(ExchangeDealPersonSource source) {
         return new ExchangeDealPersonIdentity()
                 .setComment(source.getComment())
-                .setPerson(getResolver().resolve(source.getPersonGUId()));
+                .setPerson(getResolver().resolvePerson(source.getPersonGUId()));
     }
 }

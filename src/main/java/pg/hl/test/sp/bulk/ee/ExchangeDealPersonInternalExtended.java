@@ -2,8 +2,8 @@ package pg.hl.test.sp.bulk.ee;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import pg.hl.test.sp.ei.ExchangeDealInternal;
-import pg.hl.test.sp.ei.ExchangeDealPersonInternal;
+import pg.hl.test.ei.ExchangeDealInternal;
+import pg.hl.test.ei.ExchangeDealPersonInternal;
 
 @Getter
 @AllArgsConstructor

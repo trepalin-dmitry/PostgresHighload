@@ -16,7 +16,7 @@ public class HibernateTestItemMapperSequenceOne extends HibernateTestItemMapper<
     protected ExchangeDealSequenceOne parse(ExchangeDealSource source) {
         return new ExchangeDealSequenceOne().setGuid(source.getGuid())
                 .setAccountGUId(source.getAccountGUId())
-                .setTypeCode(source.getTypeCode())
+                .setType(getResolver().resolveDealType(source.getTypeCode()))
                 .setDirectionCode(source.getDirectionCode())
                 .setPlaceCode(source.getPlaceCode())
                 .setTradeSessionGUId(source.getTradeSessionGUId())
@@ -40,12 +40,12 @@ public class HibernateTestItemMapperSequenceOne extends HibernateTestItemMapper<
                 .setComment(source.getComment())
                 .setDateTime(source.getDateTime())
                 .setIndex(source.getIndex())
-                .setType(getResolver().resolve(source.getTypeCode()));
+                .setType(getResolver().resolveStatusType(source.getTypeCode()));
     }
 
     private ExchangeDealPersonSequenceOne parse(ExchangeDealPersonSource source) {
         return new ExchangeDealPersonSequenceOne()
                 .setComment(source.getComment())
-                .setPerson(getResolver().resolve(source.getPersonGUId()));
+                .setPerson(getResolver().resolvePerson(source.getPersonGUId()));
     }
 }

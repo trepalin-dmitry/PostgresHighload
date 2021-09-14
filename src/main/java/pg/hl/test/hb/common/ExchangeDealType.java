@@ -1,6 +1,9 @@
 package pg.hl.test.hb.common;
 
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 
 import javax.persistence.*;
@@ -10,12 +13,14 @@ import javax.persistence.*;
 @Getter
 @Setter
 @ToString(onlyExplicitlyIncluded = true)
-@Table(name = "exchangeDealsStatusesTypes")
-public class ExchangeDealStatusType {
+@Table(name = "exchangeDealsTypes")
+public class ExchangeDealType {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column
+    @Setter(value = AccessLevel.NONE)
     @ToString.Include
-    private Character id;
+    private Integer id;
 
     @Column(unique = true)
     private String code;
@@ -23,4 +28,3 @@ public class ExchangeDealStatusType {
     @Column
     private String name;
 }
-

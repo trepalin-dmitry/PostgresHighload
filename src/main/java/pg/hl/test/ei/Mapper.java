@@ -1,10 +1,10 @@
-package pg.hl.test.sp.ei;
+package pg.hl.test.ei;
 
 import pg.hl.dto.ExchangeDealPersonSource;
 import pg.hl.dto.ExchangeDealSource;
 import pg.hl.dto.ExchangeDealStatusSource;
 import pg.hl.dto.ExchangeDealsPackage;
-import pg.hl.test.ExistsDataController;
+import pg.hl.test.edc.ExistsDataController;
 import pg.hl.test.IdentityStrategy;
 
 import java.beans.PropertyVetoException;
@@ -25,7 +25,7 @@ public class Mapper {
         return new ExchangeDealInternal()
                 .setGuid(source.getGuid())
                 .setAccountGUId(source.getAccountGUId())
-                .setTypeCode(source.getTypeCode())
+                .setTypeId(existsDataController.getDealsTypes().resolve(source.getTypeCode()))
                 .setDirectionCode(source.getDirectionCode())
                 .setPlaceCode(source.getPlaceCode())
                 .setTradeSessionGUId(source.getTradeSessionGUId())
@@ -53,13 +53,13 @@ public class Mapper {
                 .setComment(source.getComment())
                 .setDateTime(source.getDateTime())
                 .setIndex(source.getIndex())
-                .setTypeId(existsDataController.resolveStatusTypeId(source.getTypeCode()));
+                .setTypeId(existsDataController.getStatusesTypes().resolve(source.getTypeCode()));
     }
 
     private ExchangeDealPersonInternal parse(ExchangeDealPersonSource source) {
         return new ExchangeDealPersonInternal()
                 .setComment(source.getComment())
-                .setPersonId(existsDataController.resolvePersonId(source.getPersonGUId()));
+                .setPersonId(existsDataController.getPersons().resolve(source.getPersonGUId()));
     }
 
     public Collection<ExchangeDealInternal> parse(ExchangeDealsPackage exchangeDealsPackage) {

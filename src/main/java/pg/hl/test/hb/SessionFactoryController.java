@@ -14,6 +14,7 @@ import org.postgresql.Driver;
 import pg.hl.Settings;
 import pg.hl.test.ConnectionPoolType;
 import pg.hl.test.hb.common.ExchangeDealStatusType;
+import pg.hl.test.hb.common.ExchangeDealType;
 import pg.hl.test.hb.common.Person;
 import pg.hl.test.hb.identity.ExchangeDealIdentity;
 import pg.hl.test.hb.identity.ExchangeDealPersonIdentity;
@@ -59,6 +60,7 @@ public class SessionFactoryController {
 
         configuration.addAnnotatedClass(Person.class);
         configuration.addAnnotatedClass(ExchangeDealStatusType.class);
+        configuration.addAnnotatedClass(ExchangeDealType.class);
 
         configuration.addAnnotatedClass(ExchangeDealSequenceOne.class);
         configuration.addAnnotatedClass(ExchangeDealPersonSequenceOne.class);

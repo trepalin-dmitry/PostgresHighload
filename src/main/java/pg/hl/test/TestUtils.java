@@ -4,6 +4,7 @@ import org.jeasy.random.EasyRandom;
 import org.jeasy.random.EasyRandomParameters;
 import pg.hl.DevException;
 import pg.hl.dto.*;
+import pg.hl.test.edc.ExistsDataController;
 import pg.hl.test.hb.*;
 import pg.hl.test.hb.identity.HibernateTestItemIdentity;
 import pg.hl.test.hb.sequence.batch.HibernateTestItemSequenceBatch;
@@ -36,17 +37,23 @@ public class TestUtils {
             case Multi:
                 var exchangeDealSourceList = EASY_RANDOM
                         .objects(ExchangeDealSource.class, argument.getPackageSize())
-                        .peek(exchangeDealSource -> exchangeDealSource.getPersons().addAll(
-                                EASY_RANDOM.objects(ExchangeDealPersonSource.class, argument.getPersonsSize())
-                                        .peek(exchangeDealPersonSource -> exchangeDealPersonSource.setPersonGUId(existsDataController.getRandomPersonGuid(exchangeDealSource.getGuid())))
-                                        .collect(Collectors.toList())))
                         .peek(exchangeDealSource -> {
+                            // Тип
+                            exchangeDealSource.setTypeCode(existsDataController.getDealsTypes().getRandomCode());
+
+                            // Персоны
+                            exchangeDealSource.getPersons().addAll(
+                                    EASY_RANDOM.objects(ExchangeDealPersonSource.class, argument.getPersonsSize())
+                                            .peek(exchangeDealPersonSource -> exchangeDealPersonSource.setPersonGUId(existsDataController.getPersons().getRandomCode(exchangeDealSource.getGuid())))
+                                            .collect(Collectors.toList()));
+
+                            // Статусы
                             AtomicInteger index = new AtomicInteger(1);
                             exchangeDealSource.getStatuses().addAll(
                                     EASY_RANDOM.objects(ExchangeDealStatusSource.class, argument.getStatusesSize())
                                             .peek(exchangeDealStatusSource -> {
                                                 exchangeDealStatusSource.setIndex(index.getAndIncrement());
-                                                exchangeDealStatusSource.setTypeCode(existsDataController.getRandomStatusCode(exchangeDealSource.getGuid()));
+                                                exchangeDealStatusSource.setTypeCode(existsDataController.getStatusesTypes().getRandomCode(exchangeDealSource.getGuid()));
                                             })
                                             .collect(Collectors.toList())
                             );

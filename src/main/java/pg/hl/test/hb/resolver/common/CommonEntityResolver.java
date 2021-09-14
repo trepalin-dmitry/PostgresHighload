@@ -1,26 +1,27 @@
-package pg.hl.test.hb;
+package pg.hl.test.hb.resolver.common;
 
 import org.hibernate.Session;
+import pg.hl.DevException;
 import pg.hl.test.ResolveStrategy;
+import pg.hl.test.hb.HibernateTestItemResolverParameters;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class HibernateTestItemResolver<TEntity, TKeyInternal, TKeyExternal> {
+public abstract class CommonEntityResolver<TEntity, TKeyInternal, TKeyExternal> {
 
     private final ResolveStrategy resolveStrategy;
     private final Session session;
     private final Map<TKeyExternal, TEntity> cache = new HashMap<>();
     private final HibernateTestItemResolverParameters<TEntity, TKeyInternal, TKeyExternal> parameters;
 
-    public HibernateTestItemResolver(ResolveStrategy resolveStrategy, Session session) {
+    public CommonEntityResolver(ResolveStrategy resolveStrategy, Session session) {
         this.resolveStrategy = resolveStrategy;
         this.session = session;
         this.parameters = createParameters();
     }
 
     protected abstract HibernateTestItemResolverParameters<TEntity, TKeyInternal, TKeyExternal> createParameters();
-
 
     public void initCache() {
         switch (resolveStrategy) {
@@ -34,7 +35,7 @@ public abstract class HibernateTestItemResolver<TEntity, TKeyInternal, TKeyExter
 
         var query = session.createQuery(parameters.getHqlAll());
         for (Object o : query.list()) {
-            var item = parameters.getParseObjectFunction().apply(o);
+            var item = parameters.getEntityClazz().cast(o);
             cache.put(parameters.getGetKeyExternalFunction().apply(item), item);
         }
     }
@@ -57,14 +58,24 @@ public abstract class HibernateTestItemResolver<TEntity, TKeyInternal, TKeyExter
     }
 
     public TEntity resolve(TKeyExternal keyExternal) {
+        TEntity result;
+
         switch (resolveStrategy) {
             case Cache:
-                return resolveFromCache(keyExternal);
+                result = resolveFromCache(keyExternal);
+                break;
             case Database:
-                return resolveFromDatabase(keyExternal);
+                result = resolveFromDatabase(keyExternal);
+                break;
             default:
                 throw new IllegalStateException("Unexpected value: " + resolveStrategy);
         }
+
+        if (result == null) {
+            throw new DevException("Не удалось получить сущность! keyExternal = " + keyExternal);
+        }
+
+        return result;
     }
 
     private TEntity resolveFromCache(TKeyExternal keyExternal) {
@@ -78,7 +89,7 @@ public abstract class HibernateTestItemResolver<TEntity, TKeyInternal, TKeyExter
                 .setParameter(parameters.getHqlByKeyExternalParameterName(), keyExternal);
         TEntity result = null;
         for (Object o : query.list()) {
-            result = parameters.getParseObjectFunction().apply(o);
+            result = parameters.getEntityClazz().cast(o);
         }
         return result;
     }

@@ -8,7 +8,7 @@ import pg.hl.dto.ExchangeDealSource;
 import pg.hl.dto.ExchangeDealsPackage;
 import pg.hl.test.CreateTestItemArgument;
 import pg.hl.test.sp.StoredProcedureTestItem;
-import pg.hl.test.sp.ei.Mapper;
+import pg.hl.test.ei.Mapper;
 
 import java.beans.PropertyVetoException;
 import java.sql.CallableStatement;

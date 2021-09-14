@@ -1,4 +1,4 @@
-package pg.hl.test.sp.ei;
+package pg.hl.test.ei;
 
 import lombok.Getter;
 import lombok.Setter;

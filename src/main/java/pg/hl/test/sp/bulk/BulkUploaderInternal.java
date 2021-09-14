@@ -6,9 +6,9 @@ import pg.hl.test.sp.bulk.ee.ExchangeDealStatusInternalExtended;
 import pg.hl.test.sp.bulk.mapping.ExchangeDealInternalMapping;
 import pg.hl.test.sp.bulk.mapping.ExchangeDealPersonInternalExtendedMapping;
 import pg.hl.test.sp.bulk.mapping.ExchangeDealStatusInternalExtendedMapping;
-import pg.hl.test.sp.ei.ExchangeDealInternal;
-import pg.hl.test.sp.ei.ExchangeDealPersonInternal;
-import pg.hl.test.sp.ei.ExchangeDealStatusInternal;
+import pg.hl.test.ei.ExchangeDealInternal;
+import pg.hl.test.ei.ExchangeDealPersonInternal;
+import pg.hl.test.ei.ExchangeDealStatusInternal;
 
 import java.util.Collection;
 

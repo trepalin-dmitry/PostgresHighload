@@ -11,10 +11,10 @@ import java.util.function.Function;
 @Setter
 @Accessors(chain = true)
 @NoArgsConstructor
-public abstract class HibernateTestItemResolverParameters<TEntity, TKeyInternal, TKeyExternal> {
+public class HibernateTestItemResolverParameters<TEntity, TKeyInternal, TKeyExternal> {
     private String hqlAll;
     private String hqlByKeyExternal;
-    private Function<Object, TEntity> parseObjectFunction;
     private Function<TEntity, TKeyExternal> getKeyExternalFunction;
     private String hqlByKeyExternalParameterName;
+    private Class<TEntity> entityClazz;
 }

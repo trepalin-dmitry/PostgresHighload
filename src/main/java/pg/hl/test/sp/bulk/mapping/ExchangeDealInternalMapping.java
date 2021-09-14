@@ -1,6 +1,6 @@
 package pg.hl.test.sp.bulk.mapping;
 
-import pg.hl.test.sp.ei.ExchangeDealInternal;
+import pg.hl.test.ei.ExchangeDealInternal;
 
 public class ExchangeDealInternalMapping extends AbstractMappingExtended<ExchangeDealInternal> {
     public ExchangeDealInternalMapping() {
@@ -8,7 +8,7 @@ public class ExchangeDealInternalMapping extends AbstractMappingExtended<Exchang
 
         mapUUID("guid", ExchangeDealInternal::getGuid);
         mapUUID("accountGUId", ExchangeDealInternal::getAccountGUId);
-        mapText("typeCode", ExchangeDealInternal::getTypeCode);
+        mapInteger("typeId", ExchangeDealInternal::getTypeId);
         mapText("directionCode", ExchangeDealInternal::getDirectionCode);
         mapText("placeCode", ExchangeDealInternal::getPlaceCode);
         mapUUID("tradeSessionGUId", ExchangeDealInternal::getTradeSessionGUId);

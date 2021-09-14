@@ -1,4 +1,4 @@
-package pg.hl.test.sp.ei;
+package pg.hl.test.ei;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -29,7 +29,7 @@ public class ExchangeDealInternal {
     /**
      * Тип сделки
      */
-    private String typeCode;
+    private Integer typeId;
 
     /**
      * Направление сделки

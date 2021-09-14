@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.Accessors;
+import pg.hl.test.hb.identity.HibernateRootEntity;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
@@ -22,7 +23,7 @@ import java.util.function.BiConsumer;
 @Accessors(chain = true)
 @Table(name = "exchangeDealsSequenceOne")
 @ToString(onlyExplicitlyIncluded = true)
-public class ExchangeDealSequenceOne {
+public class ExchangeDealSequenceOne implements HibernateRootEntity {
     private static final String SEQUENCE_NAME = "exchange_deals_sequence_one_id_seq";
 
     /**
@@ -33,6 +34,7 @@ public class ExchangeDealSequenceOne {
     @SequenceGenerator(name = SEQUENCE_NAME, sequenceName = SEQUENCE_NAME, allocationSize = 1)
     @Column(nullable = false)
     @ToString.Include
+    @Accessors
     private Long id;
 
     /**

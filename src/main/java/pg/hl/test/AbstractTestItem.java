@@ -1,29 +1,32 @@
 package pg.hl.test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import pg.hl.DevException;
-import pg.hl.dto.ExchangeDealsPackage;
+import lombok.AccessLevel;
+import lombok.Getter;
+import pg.hl.dto.AbstractDataObject;
+import pg.hl.dto.AbstractDataPackage;
 
 import java.sql.SQLException;
 
-public abstract class AbstractTestItem implements TestItem {
+public abstract class AbstractTestItem<
+        TypePackage extends AbstractDataPackage<TypeExchangeDealSource>,
+        TypeExchangeDealSource extends AbstractDataObject
+        > extends BaseTestItem {
+
+    @Getter(AccessLevel.PROTECTED)
+    private final CreateTestItemArgument argument;
+    private final Class<TypePackage> typePackageClazz;
+
+    protected AbstractTestItem(CreateTestItemArgument argument, Class<TypePackage> typePackageClazz) {
+        this.argument = argument;
+        this.typePackageClazz = typePackageClazz;
+    }
+
     @Override
-    public void run(RunArgument runArgument) throws SQLException, JsonProcessingException {
-        if (runArgument == null){
-            throw new DevException("runArgument == null");
-        }
-
-        uploadDeals(runArgument.getDealsPackage());
+    protected void uploadDealsCore(Object dataPackage) throws JsonProcessingException, SQLException {
+        uploadDeals(typePackageClazz.cast(dataPackage));
     }
 
-    protected abstract void uploadDeals(ExchangeDealsPackage exchangeDealsPackage) throws JsonProcessingException, SQLException;
-
-    @Override
-    public void close() {
-        internalClose();
-    }
-
-    protected void internalClose() {
-    }
+    protected abstract void uploadDeals(TypePackage abstractDataPackage) throws JsonProcessingException, SQLException;
 }
 

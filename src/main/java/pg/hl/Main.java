@@ -1,5 +1,6 @@
 package pg.hl;
 
+import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.Accessors;
@@ -11,7 +12,7 @@ import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import pg.hl.test.*;
 
-import java.io.Closeable;
+import java.beans.PropertyVetoException;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -26,39 +27,50 @@ import java.util.stream.Collectors;
 public class Main {
 
     public static final class BenchmarkConstants {
-        public static boolean Test = false;
+        public static boolean Test = true;
 
-        public final static int FORK_WARMUPS = 1;
+        public final static int FORK_WARMUPS = 0;
         public final static int FORK_VALUE = 1;
-        public final static int WARMUP_ITERATIONS = 10;
-        public final static int MEASUREMENT_ITERATIONS = 10;
+        public final static int WARMUP_ITERATIONS = 0;
+        public final static int MEASUREMENT_ITERATIONS = 1;
 
         public static final Integer EXCHANGE_DEALS_PERSONS_SIZE = 5;
         public static final Integer EXCHANGE_DEALS_STATUSES_SIZE = 5;
     }
 
-    public static void main(String[] args) throws IOException, RunnerException, SQLException, DevException, NoSuchFieldException, InterruptedException {
+    public static void main(String[] args) throws NoSuchFieldException, PropertyVetoException, SQLException, IOException, InterruptedException, RunnerException {
         if (BenchmarkConstants.Test) {
             for (String testItemsCode : getParamValues("testItemCode", s -> s)) {
-                for (ResolveStrategy resolveStrategy : getParamValues("resolveStrategy", ResolveStrategy::valueOf)) {
-                    for (IdentityStrategy identityStrategy : getParamValues("identityStrategy", IdentityStrategy::valueOf)) {
-                        for (Integer packageSize : getParamValues("packageSize", Integer::valueOf)) {
-                            for (Integer packageSizeExist : getParamValues("packageSizeExists", Integer::valueOf)) {
-                                for (int i = 0; i < (BenchmarkConstants.FORK_WARMUPS + BenchmarkConstants.FORK_VALUE); i++) {
-                                    try (var argument = new UploadDealsArgument()
-                                            .setTestItemCode(testItemsCode)
-                                            .setResolveStrategy(resolveStrategy)
-                                            .setIdentityStrategy(identityStrategy)
-                                            .setPackageSize(packageSize)
-                                            .setPackageSizeExists(packageSizeExist)) {
-                                        System.out.println("argument = " + argument);
-                                        argument.setup();
-                                        try {
-                                            for (int j = 0; j < (BenchmarkConstants.WARMUP_ITERATIONS + BenchmarkConstants.MEASUREMENT_ITERATIONS); j++) {
-                                                uploadDeals(argument);
+                for (ConnectionPoolType connectionPoolType : getParamValues("connectionPoolType", ConnectionPoolType::valueOf)) {
+                    for (EntityType entityType : getParamValues("entityType", EntityType::valueOf)) {
+                        for (ResolveStrategy resolveStrategy : getParamValues("resolveStrategy", ResolveStrategy::valueOf)) {
+                            for (IdentityStrategy identityStrategy : getParamValues("identityStrategy", IdentityStrategy::valueOf)) {
+                                for (Integer packageSize : getParamValues("packageSize", Integer::valueOf)) {
+                                    for (Integer packageSizeExist : getParamValues("packageSizeExists", Integer::valueOf)) {
+                                        for (int i = 0; i < (BenchmarkConstants.FORK_WARMUPS + BenchmarkConstants.FORK_VALUE); i++) {
+                                            var argument = new UploadDealsArgument();
+                                            try {
+                                                argument
+                                                        .setTestItemCode(testItemsCode)
+                                                        .setConnectionPoolType(connectionPoolType)
+                                                        .setResolveStrategy(resolveStrategy)
+                                                        .setIdentityStrategy(identityStrategy)
+                                                        .setPackageSize(packageSize)
+                                                        .setPackageSizeExists(packageSizeExist)
+                                                        .setEntityType(entityType);
+
+                                                System.out.println("argument = " + argument);
+                                                argument.setup();
+                                                try {
+                                                    for (int j = 0; j < (BenchmarkConstants.WARMUP_ITERATIONS + BenchmarkConstants.MEASUREMENT_ITERATIONS); j++) {
+                                                        uploadDeals(argument);
+                                                    }
+                                                } finally {
+                                                    argument.tearDown();
+                                                }
+                                            } finally {
+                                                argument.close();
                                             }
-                                        } finally {
-                                            argument.tearDown();
                                         }
                                     }
                                 }
@@ -80,7 +92,7 @@ public class Main {
     @State(Scope.Benchmark)
     @Accessors(chain = true)
     @ToString
-    public static class UploadDealsArgument implements Closeable {
+    public static class UploadDealsArgument implements CreatePackageArgument {
         @ToString.Exclude
         private CreateTestItemArgument argument;
         @ToString.Exclude
@@ -89,25 +101,37 @@ public class Main {
         @ToString.Exclude
         private final BlockingQueue<RunArgument> runArguments = new LinkedBlockingQueue<>();
 
+        @Getter
         @Setter
         @Param({
                 TestItemsCodes.StoredProcedure.Json,
                 TestItemsCodes.StoredProcedure.Bulk,
 
-                TestItemsCodes.Hibernate.C3p0.Min.Before,
-                TestItemsCodes.Hibernate.C3p0.Min.OnException,
+                TestItemsCodes.Hibernate.Min.Before,
+                TestItemsCodes.Hibernate.Min.OnException,
 
-                TestItemsCodes.Hibernate.C3p0.Max.Before,
-                TestItemsCodes.Hibernate.C3p0.Max.OnException,
-
-                TestItemsCodes.Hibernate.Hikari.Min.Before,
-                TestItemsCodes.Hibernate.Hikari.Min.OnException,
-
-                TestItemsCodes.Hibernate.Hikari.Max.Before,
-                TestItemsCodes.Hibernate.Hikari.Max.OnException
+                TestItemsCodes.Hibernate.Max.Before,
+                TestItemsCodes.Hibernate.Max.OnException,
         })
         private String testItemCode;
 
+        @Getter
+        @Setter
+        @Param({
+                "Hikari",
+                "C3p0",
+        })
+        private ConnectionPoolType connectionPoolType;
+
+        @Getter
+        @Setter
+        @Param({
+//                "Simple",
+                "Multi",
+        })
+        private EntityType entityType;
+
+        @Getter
         @Setter
         @Param({
                 "Cache",
@@ -115,6 +139,7 @@ public class Main {
         })
         private ResolveStrategy resolveStrategy;
 
+        @Getter
         @Setter
         @Param({
                 "Identity",
@@ -123,15 +148,17 @@ public class Main {
         })
         private IdentityStrategy identityStrategy;
 
+        @Getter
         @Setter
         @Param({
                 "10",
-                "100",
-                "1000",
-                "2000",
+//                "100",
+//                "1000",
+//                "2000",
         })
         private Integer packageSize;
 
+        @Getter
         @Setter
         @Param({
                 "0",
@@ -140,10 +167,15 @@ public class Main {
         })
         private Integer packageSizeExists;
 
+        @Getter
+        private final Integer personsSize = BenchmarkConstants.EXCHANGE_DEALS_PERSONS_SIZE;
+        @Getter
+        private final Integer statusesSize = BenchmarkConstants.EXCHANGE_DEALS_STATUSES_SIZE;
+
         @Setup(Level.Trial)
-        public void setup() throws DevException, SQLException, IOException {
-            var argument = new CreateTestItemArgument(this.testItemCode, this.resolveStrategy, this.identityStrategy);
-            if (!Objects.equals(this.argument, argument)){
+        public void setup() throws PropertyVetoException, SQLException {
+            var argument = new CreateTestItemArgument(this.testItemCode, this.resolveStrategy, this.identityStrategy, this.connectionPoolType);
+            if (!Objects.equals(this.argument, argument)) {
                 closeTestItem();
                 this.testItem = TestUtils.createTestItem(argument);
                 this.argument = argument;
@@ -151,9 +183,8 @@ public class Main {
 
             // Подготовка пакетов
             var size = (Main.BenchmarkConstants.WARMUP_ITERATIONS + Main.BenchmarkConstants.MEASUREMENT_ITERATIONS);
-            var createPackageArgument = new CreatePackageArgument(this.packageSize, this.packageSizeExists, Main.BenchmarkConstants.EXCHANGE_DEALS_PERSONS_SIZE, Main.BenchmarkConstants.EXCHANGE_DEALS_STATUSES_SIZE, this.identityStrategy);
             for (int i = 0; i < size; i++) {
-                runArguments.add(new RunArgument(TestUtils.createPackage(createPackageArgument)));
+                runArguments.add(new RunArgument(TestUtils.createPackage(this)));
             }
         }
 
@@ -165,12 +196,11 @@ public class Main {
             this.testItem.run(runArguments.take());
         }
 
-        @Override
-        public void close() throws IOException {
+        public void close() throws SQLException {
             closeTestItem();
         }
 
-        protected void closeTestItem() throws IOException {
+        protected void closeTestItem() throws SQLException {
             if (this.testItem != null) {
                 this.testItem.close();
             }

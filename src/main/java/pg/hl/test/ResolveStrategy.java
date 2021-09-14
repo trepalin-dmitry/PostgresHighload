@@ -4,3 +4,4 @@ public enum ResolveStrategy {
     Cache,
     Database
 }
+

@@ -7,6 +7,7 @@ import pg.hl.dto.ExchangeDealsPackage;
 import pg.hl.test.ExistsDataController;
 import pg.hl.test.IdentityStrategy;
 
+import java.beans.PropertyVetoException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
 public class Mapper {
     private final ExistsDataController existsDataController;
 
-    public Mapper(IdentityStrategy identityStrategy) throws SQLException {
+    public Mapper(IdentityStrategy identityStrategy) throws SQLException, PropertyVetoException {
         this.existsDataController = ExistsDataController.getOrCreate(identityStrategy);
     }
 

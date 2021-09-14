@@ -1,49 +1,40 @@
 package pg.hl.test.hb;
 
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.c3p0.internal.C3P0ConnectionProvider;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.PostgreSQL95Dialect;
 import org.hibernate.exception.ConstraintViolationException;
-import org.hibernate.hikaricp.internal.HikariCPConnectionProvider;
-import org.postgresql.Driver;
 import pg.hl.ExceptionsUtils;
-import pg.hl.dto.ExchangeDealsPackage;
+import pg.hl.dto.AbstractDataObject;
+import pg.hl.dto.AbstractDataPackage;
 import pg.hl.test.AbstractTestItem;
 import pg.hl.test.hb.common.ExchangeDealStatusType;
 import pg.hl.test.hb.common.Person;
-import pg.hl.test.hb.identity.ExchangeDealIdentity;
-import pg.hl.test.hb.identity.ExchangeDealPersonIdentity;
-import pg.hl.test.hb.identity.ExchangeDealStatusIdentity;
-import pg.hl.test.hb.sequence.batch.ExchangeDealPersonSequenceBatch;
-import pg.hl.test.hb.sequence.batch.ExchangeDealSequenceBatch;
-import pg.hl.test.hb.sequence.batch.ExchangeDealStatusSequenceBatch;
-import pg.hl.test.hb.sequence.one.ExchangeDealPersonSequenceOne;
-import pg.hl.test.hb.sequence.one.ExchangeDealSequenceOne;
-import pg.hl.test.hb.sequence.one.ExchangeDealStatusSequenceOne;
-import ru.vtb.zf.common.data.naming.PhysicalNamingStrategyQuotedImpl;
+import pg.hl.test.hb.identity.HibernateRootEntity;
 
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public abstract class HibernateTestItem<TypeExchangeDeal> extends AbstractTestItem {
-    private final static Hbm2DdlAuto HBM_2_DDL_AUTO = Hbm2DdlAuto.Validate;
-    private final static Boolean SHOW_SQL = false;
-    private SessionFactory sessionFactory = null;
+public abstract class HibernateTestItem<
+        TypePackage extends AbstractDataPackage<TypeExchangeDealSource>,
+        TypeExchangeDealSource extends AbstractDataObject,
+        TypeExchangeDealTarget extends HibernateRootEntity
+        > extends AbstractTestItem<TypePackage, TypeExchangeDealSource> implements HibernateResolver {
+
+    private final HibernateTestItemMapper<TypeExchangeDealSource, TypeExchangeDealTarget> mapper;
     private final Session session;
     private final ExchangeDealStatusTypeResolver exchangeDealStatusTypeResolver;
     private final PersonResolver personResolver;
-    private final HibernateTestItemMapper<TypeExchangeDeal> mapper;
     private final CreateHibernateTestItemArgument argument;
     private final String exchangeDealHqlName;
+    private final Class<TypeExchangeDealTarget> typeExchangeDealTargetClazz;
 
-    public HibernateTestItem(CreateHibernateTestItemArgument argument) {
+    protected HibernateTestItem(Class<TypePackage> typePackageClazz, Class<TypeExchangeDealTarget> typeExchangeDealTargetClazz, CreateHibernateTestItemArgument argument) {
+        super(argument.getParentArgument(), typePackageClazz);
+        this.typeExchangeDealTargetClazz = typeExchangeDealTargetClazz;
         this.argument = argument;
         this.exchangeDealHqlName = createExchangeDealHqlName();
         this.mapper = createMapper();
@@ -53,68 +44,19 @@ public abstract class HibernateTestItem<TypeExchangeDeal> extends AbstractTestIt
         loadCache();
     }
 
-    protected abstract String createExchangeDealHqlName();
+    private String createExchangeDealHqlName() {
+        return typeExchangeDealTargetClazz.getSimpleName();
+    }
 
-    protected abstract HibernateTestItemMapper<TypeExchangeDeal> createMapper();
+    protected abstract HibernateTestItemMapper<TypeExchangeDealSource, TypeExchangeDealTarget> createMapper();
 
     @Override
-    protected void uploadDeals(ExchangeDealsPackage exchangeDealsPackage) {
-        var exchangeDeals = mapper.parse(exchangeDealsPackage);
-        saveOrUpdate(exchangeDeals, argument.getCheckExistsStrategy());
+    protected void uploadDeals(TypePackage dealsPackage) {
+        saveOrUpdate(mapper.parse(dealsPackage), argument.getCheckExistsStrategy());
     }
 
     protected Session createSessionInternal() {
-        if (sessionFactory == null) {
-            Configuration configuration = new Configuration();
-
-            configuration.setProperty("hibernate.dialect", PostgreSQL95Dialect.class.getCanonicalName());
-            configuration.setProperty("hibernate.connection.driver_class", Driver.class.getCanonicalName());
-            configuration.setProperty("hibernate.connection.url", "jdbc:postgresql://localhost:5432/postgresHighLoad");
-            configuration.setProperty("hibernate.connection.username", "postgres");
-            configuration.setProperty("hibernate.connection.password", "postgres");
-            configuration.setProperty("hibernate.connection.pool_size", Integer.toString(1));
-            configuration.setProperty("hibernate.show_sql", Boolean.toString(SHOW_SQL));
-            configuration.setProperty("hibernate.hbm2ddl.auto", HBM_2_DDL_AUTO.getValue());
-
-            configuration.setPhysicalNamingStrategy(new PhysicalNamingStrategyQuotedImpl()); // Через конфигурационный файл не работает (хотя инициализируется)
-
-            configuration.addAnnotatedClass(Person.class);
-            configuration.addAnnotatedClass(ExchangeDealStatusType.class);
-
-            configuration.addAnnotatedClass(ExchangeDealSequenceOne.class);
-            configuration.addAnnotatedClass(ExchangeDealPersonSequenceOne.class);
-            configuration.addAnnotatedClass(ExchangeDealStatusSequenceOne.class);
-
-            configuration.addAnnotatedClass(ExchangeDealSequenceBatch.class);
-            configuration.addAnnotatedClass(ExchangeDealPersonSequenceBatch.class);
-            configuration.addAnnotatedClass(ExchangeDealStatusSequenceBatch.class);
-
-            configuration.addAnnotatedClass(ExchangeDealIdentity.class);
-            configuration.addAnnotatedClass(ExchangeDealPersonIdentity.class);
-            configuration.addAnnotatedClass(ExchangeDealStatusIdentity.class);
-
-            switch (argument.getConnectionPoolType()) {
-                case Hikari:
-                    configuration.setProperty("hibernate.connection.provider_class", HikariCPConnectionProvider.class.getCanonicalName());
-                    configuration.setProperty("hibernate.hikari.maximumPoolSize", Integer.toString(1));
-                    break;
-                case C3p0:
-                    configuration.setProperty("hibernate.connection.provider_class", C3P0ConnectionProvider.class.getCanonicalName());
-                    configuration.setProperty("hibernate.c3p0.min_size", Integer.toString(1));
-                    configuration.setProperty("hibernate.c3p0.max_size", Integer.toString(1));
-                    configuration.setProperty("hibernate.c3p0.acquire_increment", Integer.toString(1));
-                    configuration.setProperty("hibernate.c3p0.timeout", "1800");
-                    break;
-                default:
-                    throw new IllegalStateException("Unexpected value: " + argument.getConnectionPoolType());
-            }
-
-            configuration.setProperty("hibernate.jdbc.batch_size", String.valueOf(argument.getSaveStrategy().getValue()));
-
-            StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties());
-            sessionFactory = configuration.buildSessionFactory(builder.build());
-        }
-        return sessionFactory.openSession();
+        return SessionFactoryController.openSession(argument);
     }
 
     public Collection<UUID> findDealsGUIds(int maxValue) {
@@ -122,12 +64,14 @@ public abstract class HibernateTestItem<TypeExchangeDeal> extends AbstractTestIt
         query.setMaxResults(maxValue);
         List<UUID> result = new ArrayList<>();
         for (Object o : query.list()) {
-            result.add(getGuid(parse(o)));
+            result.add(cast(o).getGuid());
         }
         return result;
     }
 
-    protected abstract TypeExchangeDeal parse(Object o);
+    private TypeExchangeDealTarget cast(Object o){
+        return typeExchangeDealTargetClazz.cast(o);
+    }
 
     public Collection<Person> findPersons(int maxValue) {
         return findInternal("From Person", maxValue, o -> (Person) o);
@@ -156,7 +100,7 @@ public abstract class HibernateTestItem<TypeExchangeDeal> extends AbstractTestIt
         }
     }
 
-    private void saveOrUpdate(Collection<TypeExchangeDeal> exchangeDeals, CheckExistsStrategy checkExistsStrategy) {
+    private void saveOrUpdate(Collection<TypeExchangeDealTarget> exchangeDeals, CheckExistsStrategy checkExistsStrategy) {
         switch (checkExistsStrategy) {
             case Before:
                 saveOrUpdateInternal(exchangeDeals, true, false);
@@ -177,35 +121,34 @@ public abstract class HibernateTestItem<TypeExchangeDeal> extends AbstractTestIt
         }
     }
 
-    protected void saveOrUpdateInternal(Collection<TypeExchangeDeal> items, Boolean checkExist, Boolean repeat) {
+    protected void saveOrUpdateInternal(Collection<TypeExchangeDealTarget> items, Boolean checkExist, Boolean repeat) {
         try {
             sessionDoWithTransaction(session -> {
                 var existsMap = new HashMap<UUID, Long>();
 
                 if (checkExist) {
                     // Получаем имеющиеся элементы
-                    var uuids = items.stream().map(this::getGuid).collect(Collectors.toList());
+                    var uuids = items.stream().map(TypeExchangeDealTarget::getGuid).collect(Collectors.toList());
                     Query query = session.createQuery("SELECT e FROM " + exchangeDealHqlName + " e where e.guid in (:guids)").setParameterList("guids", uuids);
                     for (Object o : query.getResultList()) {
-                        TypeExchangeDeal exchangeDeal = parse(o);
-                        existsMap.put(getGuid(exchangeDeal), getId(exchangeDeal));
+                        TypeExchangeDealTarget exchangeDeal = cast(o);
+                        existsMap.put(exchangeDeal.getGuid(), exchangeDeal.getId());
                     }
                 }
 
-                for (TypeExchangeDeal exchangeDeal : items) {
+                for (TypeExchangeDealTarget exchangeDeal : items) {
                     if (checkExist) {
-                        Long id = existsMap.get(getGuid(exchangeDeal));
+                        Long id = existsMap.get(exchangeDeal.getGuid());
                         if (id != null) {
-                            setId(exchangeDeal, id);
+                            exchangeDeal.setId(id);
                             session.merge(exchangeDeal);
                             continue;
                         }
                     }
 
-                    if (repeat){
+                    if (repeat) {
                         session.save(exchangeDeal);
-                    }
-                    else {
+                    } else {
                         session.persist(exchangeDeal);
                     }
                 }
@@ -237,14 +180,16 @@ public abstract class HibernateTestItem<TypeExchangeDeal> extends AbstractTestIt
         });
     }
 
-    protected abstract void setId(TypeExchangeDeal exchangeDeal, Long id);
-
-    protected abstract Long getId(TypeExchangeDeal exchangeDeal);
-
-    protected abstract UUID getGuid(TypeExchangeDeal exchangeDeal);
-
     protected void cleanupCache() {
         exchangeDealStatusTypeResolver.cleanupCache();
         personResolver.cleanupCache();
     }
+
+    @Override
+    public void close() throws SQLException {
+        session.close();
+
+        super.close();
+    }
 }
+

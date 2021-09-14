@@ -1,4 +1,4 @@
-package pg.hl.test.hb;
+package pg.hl.test;
 
 public enum ConnectionPoolType {
     Hikari,

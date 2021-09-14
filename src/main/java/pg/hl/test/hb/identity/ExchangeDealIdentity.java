@@ -22,7 +22,7 @@ import java.util.function.BiConsumer;
 @Accessors(chain = true)
 @Table(name = "exchangeDealsIdentity")
 @ToString(onlyExplicitlyIncluded = true)
-public class ExchangeDealIdentity {
+public class ExchangeDealIdentity implements HibernateRootEntity {
     /**
      * ID объекта
      */
@@ -30,6 +30,7 @@ public class ExchangeDealIdentity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(nullable = false)
     @ToString.Include
+    @Accessors
     private Long id;
 
     /**
@@ -164,3 +165,4 @@ public class ExchangeDealIdentity {
         }
     }
 }
+

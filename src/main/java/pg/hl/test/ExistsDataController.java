@@ -4,6 +4,7 @@ import pg.hl.DevException;
 import pg.hl.test.hb.common.ExchangeDealStatusType;
 import pg.hl.test.hb.common.Person;
 
+import java.beans.PropertyVetoException;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -25,7 +26,7 @@ public class ExistsDataController {
     private final Map<String, Character> statusesTypes = new HashMap<>();
     private final String[] statusesTypesCodes;
 
-    public static ExistsDataController getOrCreate(IdentityStrategy identityStrategy) throws SQLException, DevException {
+    public static ExistsDataController getOrCreate(IdentityStrategy identityStrategy) throws SQLException, DevException, PropertyVetoException {
         var result = controllers.get(identityStrategy);
         if (result == null) {
             result = new ExistsDataController(identityStrategy);
@@ -34,9 +35,10 @@ public class ExistsDataController {
         return result;
     }
 
-    private ExistsDataController(IdentityStrategy identityStrategy) throws SQLException, DevException {
+    private ExistsDataController(IdentityStrategy identityStrategy) throws SQLException, DevException, PropertyVetoException {
         this.identityStrategy = identityStrategy;
-        try (var defaultTestItem = TestUtils.createDefaultTestItem(identityStrategy)) {
+        var defaultTestItem = TestUtils.createDefaultTestItem(identityStrategy);
+        try {
             var sourcePersons = defaultTestItem.findPersons(Integer.MAX_VALUE);
             if (sourcePersons.size() == 0) {
                 sourcePersons = TestUtils.EASY_RANDOM.objects(Person.class, PERSONS_SIZE).collect(Collectors.toList());
@@ -69,14 +71,19 @@ public class ExistsDataController {
             if (statusesTypesCodes.length <= 0) {
                 throw new DevException("Статусы отсутствуют в БД!");
             }
+        } finally {
+            defaultTestItem.close();
         }
     }
 
-    public void populateDeals(int dealsSize) throws SQLException, DevException {
+    public void populateDeals(int dealsSize) throws SQLException, DevException, PropertyVetoException {
         if (dealsSize > existsDealsGUIds.size()) {
             existsDealsGUIds.clear();
-            try (var item = TestUtils.createDefaultTestItem(identityStrategy)) {
+            var item = TestUtils.createDefaultTestItem(identityStrategy);
+            try {
                 existsDealsGUIds.addAll(item.findDealsGUIds(dealsSize));
+            } finally {
+                item.close();
             }
         }
     }
@@ -106,7 +113,7 @@ public class ExistsDataController {
 
         for (int i = 0; i < MAX_RANDOM_COUNT; i++) {
             T result = source[RANDOM.nextInt(source.length - 1)];
-            if (usedRandomValues.add(result)){
+            if (usedRandomValues.add(result)) {
                 return result;
             }
         }

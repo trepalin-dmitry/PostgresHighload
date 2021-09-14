@@ -3,11 +3,11 @@ package pg.hl.test.hb.sequence.batch;
 import pg.hl.dto.ExchangeDealPersonSource;
 import pg.hl.dto.ExchangeDealSource;
 import pg.hl.dto.ExchangeDealStatusSource;
-import pg.hl.test.hb.HibernateTestItem;
+import pg.hl.test.hb.HibernateResolver;
 import pg.hl.test.hb.HibernateTestItemMapper;
 
-public class HibernateTestItemMapperSequenceBatch extends HibernateTestItemMapper<ExchangeDealSequenceBatch> {
-    protected HibernateTestItemMapperSequenceBatch(HibernateTestItem<ExchangeDealSequenceBatch> testItem) {
+public class HibernateTestItemMapperSequenceBatch extends HibernateTestItemMapper<ExchangeDealSource, ExchangeDealSequenceBatch> {
+    protected HibernateTestItemMapperSequenceBatch(HibernateResolver testItem) {
         super(testItem);
     }
 
@@ -39,12 +39,12 @@ public class HibernateTestItemMapperSequenceBatch extends HibernateTestItemMappe
                 .setComment(source.getComment())
                 .setDateTime(source.getDateTime())
                 .setIndex(source.getIndex())
-                .setType(getTestItem().resolve(source.getTypeCode()));
+                .setType(getResolver().resolve(source.getTypeCode()));
     }
 
     private ExchangeDealPersonSequenceBatch parse(ExchangeDealPersonSource source) {
         return new ExchangeDealPersonSequenceBatch()
                 .setComment(source.getComment())
-                .setPerson(getTestItem().resolve(source.getPersonGUId()));
+                .setPerson(getResolver().resolve(source.getPersonGUId()));
     }
 }

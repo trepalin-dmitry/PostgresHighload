@@ -3,11 +3,12 @@ package pg.hl.test.hb.sequence.one;
 import pg.hl.dto.ExchangeDealPersonSource;
 import pg.hl.dto.ExchangeDealSource;
 import pg.hl.dto.ExchangeDealStatusSource;
-import pg.hl.test.hb.HibernateTestItem;
+import pg.hl.test.hb.HibernateResolver;
 import pg.hl.test.hb.HibernateTestItemMapper;
 
-public class HibernateTestItemMapperSequenceOne extends HibernateTestItemMapper<ExchangeDealSequenceOne> {
-    protected HibernateTestItemMapperSequenceOne(HibernateTestItem<ExchangeDealSequenceOne> testItem) {
+public class HibernateTestItemMapperSequenceOne extends HibernateTestItemMapper<ExchangeDealSource, ExchangeDealSequenceOne> {
+
+    protected HibernateTestItemMapperSequenceOne(HibernateResolver testItem) {
         super(testItem);
     }
 
@@ -39,12 +40,12 @@ public class HibernateTestItemMapperSequenceOne extends HibernateTestItemMapper<
                 .setComment(source.getComment())
                 .setDateTime(source.getDateTime())
                 .setIndex(source.getIndex())
-                .setType(getTestItem().resolve(source.getTypeCode()));
+                .setType(getResolver().resolve(source.getTypeCode()));
     }
 
     private ExchangeDealPersonSequenceOne parse(ExchangeDealPersonSource source) {
         return new ExchangeDealPersonSequenceOne()
                 .setComment(source.getComment())
-                .setPerson(getTestItem().resolve(source.getPersonGUId()));
+                .setPerson(getResolver().resolve(source.getPersonGUId()));
     }
 }

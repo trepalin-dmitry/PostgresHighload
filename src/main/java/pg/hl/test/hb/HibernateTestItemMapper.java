@@ -2,36 +2,39 @@ package pg.hl.test.hb;
 
 import lombok.AccessLevel;
 import lombok.Getter;
-import pg.hl.dto.ExchangeDealSource;
-import pg.hl.dto.ExchangeDealsPackage;
+import pg.hl.dto.AbstractDataObject;
+import pg.hl.dto.AbstractDataPackage;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public abstract class HibernateTestItemMapper<TypeExchangeDeal> {
+public abstract class HibernateTestItemMapper<TypeExchangeDealSource extends AbstractDataObject, TypeExchangeDealTarget> {
     @Getter(AccessLevel.PROTECTED)
-    private final HibernateTestItem<TypeExchangeDeal> testItem;
+    private final HibernateResolver resolver;
 
-    protected HibernateTestItemMapper(HibernateTestItem<TypeExchangeDeal> testItem) {
-        this.testItem = testItem;
+    protected HibernateTestItemMapper(HibernateResolver resolver) {
+        this.resolver = resolver;
     }
 
-    protected  <TypeSource, TypeTarget> Collection<TypeTarget> parse(Collection<TypeSource> source, Function<TypeSource, TypeTarget> function) {
-        return source.stream().map(function).collect(Collectors.toList());
+    protected <TypeSource, TypeTarget> Collection<TypeTarget> parse(Collection<TypeSource> source, Function<TypeSource, TypeTarget> function) {
+        return source
+                .stream()
+                .map(function)
+                .collect(Collectors.toList());
     }
 
-    public Collection<TypeExchangeDeal> parse(ExchangeDealsPackage exchangeDealsPackage) {
-        var deals = new ArrayList<TypeExchangeDeal>();
+    public <TypeExchangeDealSourcePackage extends AbstractDataPackage<TypeExchangeDealSource>> Collection<TypeExchangeDealTarget> parse(TypeExchangeDealSourcePackage exchangeDealsPackage) {
+        var deals = new ArrayList<TypeExchangeDealTarget>();
 
-        for (ExchangeDealSource exchangeDealSource : exchangeDealsPackage.getObjects()) {
+        for (TypeExchangeDealSource exchangeDealSource : exchangeDealsPackage.getObjects()) {
             deals.add(parse(exchangeDealSource));
         }
 
         return deals;
     }
 
-    protected abstract TypeExchangeDeal parse(ExchangeDealSource exchangeDealSource);
+    protected abstract TypeExchangeDealTarget parse(TypeExchangeDealSource exchangeDealSource);
 }
 

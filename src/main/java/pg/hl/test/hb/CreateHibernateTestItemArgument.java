@@ -10,7 +10,6 @@ import pg.hl.test.CreateTestItemArgument;
 @ToString
 public class CreateHibernateTestItemArgument {
     private CreateTestItemArgument parentArgument;
-    private ConnectionPoolType connectionPoolType;
-    private BatchSize saveStrategy;
+    private BatchSize batchSize;
     private CheckExistsStrategy checkExistsStrategy;
 }

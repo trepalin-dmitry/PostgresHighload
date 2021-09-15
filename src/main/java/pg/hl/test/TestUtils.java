@@ -2,6 +2,7 @@ package pg.hl.test;
 
 import org.jeasy.random.EasyRandom;
 import org.jeasy.random.EasyRandomParameters;
+import pg.hl.config.Configuration;
 import pg.hl.dto.multi.ExchangeDealPersonSource;
 import pg.hl.dto.multi.ExchangeDealSource;
 import pg.hl.dto.multi.ExchangeDealStatusSource;
@@ -35,6 +36,7 @@ import pg.hl.test.sp.ei.simple.SimpleExchangeDealSourceInternalMapper;
 import pg.hl.test.sp.json.StoredProcedureJsonTestItem;
 
 import java.beans.PropertyVetoException;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.Random;
@@ -51,8 +53,9 @@ public class TestUtils {
         EASY_RANDOM = new EasyRandom(easyRandomParameters);
     }
 
-    public static Object createPackage(CreatePackageArgument argument) throws SQLException, PropertyVetoException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    public static Object createPackage(CreatePackageArgument argument) throws SQLException, PropertyVetoException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException {
         ExistsDataController existsDataController = ExistsDataController.getOrCreate(argument.getIdentityStrategy(), argument.getEntityType());
+        Configuration configuration = Configuration.getInstance();
 
         switch (argument.getEntityType()) {
             case Simple:
@@ -80,14 +83,14 @@ public class TestUtils {
 
                             // Персоны
                             exchangeDealSource.getPersons().addAll(
-                                    EASY_RANDOM.objects(ExchangeDealPersonSource.class, argument.getPersonsSize())
+                                    EASY_RANDOM.objects(ExchangeDealPersonSource.class, configuration.getEntities().getExchangeDealsPersonsSize())
                                             .peek(exchangeDealPersonSource -> exchangeDealPersonSource.setPersonGUId(existsDataController.getPersons().getRandomCode(exchangeDealSource.getGuid())))
                                             .collect(Collectors.toList()));
 
                             // Статусы
                             AtomicInteger index = new AtomicInteger(1);
                             exchangeDealSource.getStatuses().addAll(
-                                    EASY_RANDOM.objects(ExchangeDealStatusSource.class, argument.getStatusesSize())
+                                    EASY_RANDOM.objects(ExchangeDealStatusSource.class, configuration.getEntities().getExchangeDealsStatusesSize())
                                             .peek(exchangeDealStatusSource -> {
                                                 exchangeDealStatusSource.setIndex(index.getAndIncrement());
                                                 exchangeDealStatusSource.setTypeCode(existsDataController.getStatusesTypes().getRandomCode(exchangeDealSource.getGuid()));
@@ -109,32 +112,32 @@ public class TestUtils {
         }
     }
 
-    public static DatabaseHelper createDatabaseHelper(IdentityStrategy identityStrategy, EntityType entityType) throws SQLException, PropertyVetoException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
-        return (DatabaseHelper) createTestItem(new CreateTestItemArgument(TestItemsCodes.Hibernate.Min.Before, ResolveStrategy.Cache, identityStrategy, ConnectionPoolType.Hikari, entityType));
+    public static DatabaseHelper createDatabaseHelper(IdentityStrategy identityStrategy, EntityType entityType) throws SQLException, PropertyVetoException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException {
+        return (DatabaseHelper) createTestItem(new CreateTestItemArgument(TestItemKind.HibernateMinBefore, ResolveStrategy.Cache, identityStrategy, ConnectionPoolType.Hikari, entityType));
     }
 
-    public static TestItem createTestItem(CreateTestItemArgument argument) throws SQLException, PropertyVetoException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
-        switch (argument.getCode()) {
-            case TestItemsCodes.StoredProcedure.Json:
+    public static TestItem createTestItem(CreateTestItemArgument argument) throws SQLException, PropertyVetoException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException {
+        switch (argument.getTestItemKind()) {
+            case StoredProcedureJson:
                 return createStoredProcedureJsonTestItem(argument);
-            case TestItemsCodes.StoredProcedure.Bulk:
+            case StoredProcedureBulk:
                 return createStoredProcedureCopyTestItem(argument);
 
-            case TestItemsCodes.Hibernate.Min.OnException:
+            case HibernateMinOnException:
                 return createHibernateTestItem(new CreateHibernateTestItemArgument(argument, BatchSize.Min, CheckExistsStrategy.OnException));
-            case TestItemsCodes.Hibernate.Min.Before:
+            case HibernateMinBefore:
                 return createHibernateTestItem(new CreateHibernateTestItemArgument(argument, BatchSize.Min, CheckExistsStrategy.Before));
-            case TestItemsCodes.Hibernate.Max.OnException:
+            case HibernateMaxOnException:
                 return createHibernateTestItem(new CreateHibernateTestItemArgument(argument, BatchSize.Max, CheckExistsStrategy.OnException));
-            case TestItemsCodes.Hibernate.Max.Before:
+            case HibernateMaxBefore:
                 return createHibernateTestItem(new CreateHibernateTestItemArgument(argument, BatchSize.Max, CheckExistsStrategy.Before));
 
             default:
-                throw new IllegalStateException("Unexpected value: " + argument.getCode());
+                throw new IllegalStateException("Unexpected value: " + argument.getTestItemKind());
         }
     }
 
-    private static TestItem createStoredProcedureJsonTestItem(CreateTestItemArgument argument) throws PropertyVetoException, SQLException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    private static TestItem createStoredProcedureJsonTestItem(CreateTestItemArgument argument) throws PropertyVetoException, SQLException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException {
         switch (argument.getEntityType()) {
             case Simple:
                 return new StoredProcedureJsonTestItem<>(argument, SimpleExchangeDealsPackage.class, SimpleExchangeDealSourceInternalMapper.class);
@@ -145,7 +148,7 @@ public class TestUtils {
         }
     }
 
-    private static TestItem createStoredProcedureCopyTestItem(CreateTestItemArgument argument) throws PropertyVetoException, SQLException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    private static TestItem createStoredProcedureCopyTestItem(CreateTestItemArgument argument) throws PropertyVetoException, SQLException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException {
         switch (argument.getEntityType()) {
             case Simple:
                 return new StoredProcedureCopyTestItem<>(argument, SimpleExchangeDealsPackage.class, SimpleExchangeDealSourceInternalMapper.class, SimpleBulkUploaderSource.class, SimpleBulkUploaderInternal.class);
@@ -156,7 +159,7 @@ public class TestUtils {
         }
     }
 
-    private static TestItem createHibernateTestItem(CreateHibernateTestItemArgument argument) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    private static TestItem createHibernateTestItem(CreateHibernateTestItemArgument argument) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException {
         switch (argument.getParentArgument().getEntityType()) {
             case Simple:
                 switch (argument.getParentArgument().getIdentityStrategy()) {

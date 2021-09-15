@@ -11,6 +11,7 @@ import pg.hl.test.IdentityStrategy;
 import pg.hl.test.sp.ei.AbstractMapper;
 
 import java.beans.PropertyVetoException;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -29,7 +30,7 @@ public abstract class StoredProcedureTestItem<
     @Getter(AccessLevel.PROTECTED)
     private final TypeMapper mapper;
 
-    protected StoredProcedureTestItem(CreateTestItemArgument argument, Class<TypePackage> typePackageClazz, Class<TypeMapper> typeMapperClazz) throws PropertyVetoException, SQLException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+    protected StoredProcedureTestItem(CreateTestItemArgument argument, Class<TypePackage> typePackageClazz, Class<TypeMapper> typeMapperClazz) throws PropertyVetoException, SQLException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException, IOException {
         super(argument, typePackageClazz);
 
         this.connection = ConnectionPoolController.getConnection(argument.getConnectionPoolType());

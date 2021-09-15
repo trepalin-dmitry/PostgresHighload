@@ -9,6 +9,7 @@ import pg.hl.test.IdentityStrategy;
 import pg.hl.test.sp.ei.AbstractMapper;
 
 import java.beans.PropertyVetoException;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -16,7 +17,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class ExchangeDealSourceInternalMapper extends AbstractMapper<ExchangeDealsPackage, ExchangeDealSource, ExchangeDealInternal> {
-    public ExchangeDealSourceInternalMapper(IdentityStrategy identityStrategy, EntityType entityType) throws SQLException, PropertyVetoException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    public ExchangeDealSourceInternalMapper(IdentityStrategy identityStrategy, EntityType entityType) throws SQLException, PropertyVetoException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException {
         super(identityStrategy, entityType);
     }
 

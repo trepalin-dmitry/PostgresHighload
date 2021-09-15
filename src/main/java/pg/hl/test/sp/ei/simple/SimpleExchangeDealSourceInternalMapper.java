@@ -7,11 +7,12 @@ import pg.hl.test.IdentityStrategy;
 import pg.hl.test.sp.ei.AbstractMapper;
 
 import java.beans.PropertyVetoException;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 
 public class SimpleExchangeDealSourceInternalMapper extends AbstractMapper<SimpleExchangeDealsPackage, SimpleExchangeDealSource, SimpleExchangeDealInternal> {
-    public SimpleExchangeDealSourceInternalMapper(IdentityStrategy identityStrategy, EntityType entityType) throws SQLException, PropertyVetoException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    public SimpleExchangeDealSourceInternalMapper(IdentityStrategy identityStrategy, EntityType entityType) throws SQLException, PropertyVetoException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException {
         super(identityStrategy, entityType);
     }
 

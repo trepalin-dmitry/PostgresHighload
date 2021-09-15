@@ -10,7 +10,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 public class CreateTestItemArgument {
-    private String code;
+    private TestItemKind testItemKind;
     private ResolveStrategy resolveStrategy;
     private IdentityStrategy identityStrategy;
     private ConnectionPoolType connectionPoolType;

@@ -12,6 +12,7 @@ import pg.hl.test.sp.bulk.simple.BaseBulkUploader;
 import pg.hl.test.sp.ei.AbstractMapper;
 
 import java.beans.PropertyVetoException;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.CallableStatement;
 import java.sql.SQLException;
@@ -34,7 +35,7 @@ public class StoredProcedureCopyTestItem<
         objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     }
 
-    public StoredProcedureCopyTestItem(CreateTestItemArgument argument, Class<TypePackage> typePackageClazz, Class<TypeMapper> typeMapperClazz, Class<TypeBulkUploaderDatabase> typeBulkUploaderDatabaseClazz, Class<TypeBulkUploaderCache> typeBulkUploaderCacheClazz) throws PropertyVetoException, SQLException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    public StoredProcedureCopyTestItem(CreateTestItemArgument argument, Class<TypePackage> typePackageClazz, Class<TypeMapper> typeMapperClazz, Class<TypeBulkUploaderDatabase> typeBulkUploaderDatabaseClazz, Class<TypeBulkUploaderCache> typeBulkUploaderCacheClazz) throws PropertyVetoException, SQLException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException {
         super(argument, typePackageClazz, typeMapperClazz);
 
         this.pgConnection = this.getConnection().unwrap(PgConnection.class);

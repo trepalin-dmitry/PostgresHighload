@@ -7,11 +7,10 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.c3p0.internal.C3P0ConnectionProvider;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.PostgreSQL95Dialect;
 import org.hibernate.hikaricp.internal.HikariCPConnectionProvider;
 import org.postgresql.Driver;
-import pg.hl.Settings;
+import pg.hl.config.Configuration;
 import pg.hl.test.ConnectionPoolType;
 import pg.hl.test.hb.common.ExchangeDealStatusType;
 import pg.hl.test.hb.common.ExchangeDealType;
@@ -30,13 +29,14 @@ import pg.hl.test.hb.entity.simple.sequence.batch.SimpleExchangeDealSequenceBatc
 import pg.hl.test.hb.entity.simple.sequence.one.SimpleExchangeDealSequenceOne;
 import ru.vtb.zf.common.data.naming.PhysicalNamingStrategyQuotedImpl;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class SessionFactoryController {
     private static final Map<SessionFactoryKey, SessionFactory> sessionFactoryMap = new HashMap<>();
 
-    public static Session openSession(CreateHibernateTestItemArgument argument) {
+    public static Session openSession(CreateHibernateTestItemArgument argument) throws IOException {
         var sessionFactoryKey = new SessionFactoryKey(argument.getParentArgument().getConnectionPoolType(), argument.getBatchSize());
         var sessionFactory = sessionFactoryMap.get(sessionFactoryKey);
         if (sessionFactory == null) {
@@ -46,18 +46,18 @@ public class SessionFactoryController {
         return sessionFactory.openSession();
     }
 
-    private static SessionFactory createSessionFactory(SessionFactoryKey argument) {
+    private static SessionFactory createSessionFactory(SessionFactoryKey argument) throws IOException {
 
-        Configuration configuration = new Configuration();
+        org.hibernate.cfg.Configuration configuration = new org.hibernate.cfg.Configuration();
 
         configuration.setProperty("hibernate.dialect", PostgreSQL95Dialect.class.getCanonicalName());
         configuration.setProperty("hibernate.connection.driver_class", Driver.class.getCanonicalName());
-        configuration.setProperty("hibernate.connection.url", Settings.ConnectionSettings.JDBC_URL);
-        configuration.setProperty("hibernate.connection.username", Settings.ConnectionSettings.USER);
-        configuration.setProperty("hibernate.connection.password", Settings.ConnectionSettings.PASSWORD);
+        configuration.setProperty("hibernate.connection.url", Configuration.getInstance().getConnection().getJdbcUrl());
+        configuration.setProperty("hibernate.connection.username", Configuration.getInstance().getConnection().getUser());
+        configuration.setProperty("hibernate.connection.password", Configuration.getInstance().getConnection().getPassword());
         configuration.setProperty("hibernate.connection.pool_size", Integer.toString(1));
-        configuration.setProperty("hibernate.show_sql", Boolean.toString(Settings.Hibernate.SHOW_SQL));
-        configuration.setProperty("hibernate.hbm2ddl.auto", Settings.Hibernate.HBM_2_DDL_AUTO.getValue());
+        configuration.setProperty("hibernate.show_sql", Boolean.toString(Configuration.getInstance().getHibernate().getShowSql()));
+        configuration.setProperty("hibernate.hbm2ddl.auto", Configuration.getInstance().getHibernate().getHbm2DdlAuto().getValue());
 
         configuration.setPhysicalNamingStrategy(new PhysicalNamingStrategyQuotedImpl()); // Через конфигурационный файл не работает (хотя инициализируется)
 

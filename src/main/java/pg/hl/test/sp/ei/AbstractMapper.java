@@ -9,6 +9,7 @@ import pg.hl.test.IdentityStrategy;
 import pg.hl.test.edc.ExistsDataController;
 
 import java.beans.PropertyVetoException;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -18,7 +19,7 @@ public abstract class AbstractMapper<TypePackage extends AbstractDataPackage<Typ
     @Getter(AccessLevel.PROTECTED)
     private final ExistsDataController existsDataController;
 
-    protected AbstractMapper(IdentityStrategy identityStrategy, EntityType entityType) throws PropertyVetoException, SQLException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    protected AbstractMapper(IdentityStrategy identityStrategy, EntityType entityType) throws PropertyVetoException, SQLException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException {
         this.existsDataController = ExistsDataController.getOrCreate(identityStrategy, entityType);
     }
 

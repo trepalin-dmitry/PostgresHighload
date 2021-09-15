@@ -11,6 +11,7 @@ import pg.hl.test.sp.StoredProcedureTestItem;
 import pg.hl.test.sp.ei.AbstractMapper;
 
 import java.beans.PropertyVetoException;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.CallableStatement;
 import java.sql.SQLException;
@@ -30,7 +31,7 @@ public class StoredProcedureJsonTestItem<
         objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     }
 
-    public StoredProcedureJsonTestItem(CreateTestItemArgument argument, Class<TypePackage> typePackageClazz, Class<TypeMapper> typeMapperClazz) throws PropertyVetoException, SQLException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+    public StoredProcedureJsonTestItem(CreateTestItemArgument argument, Class<TypePackage> typePackageClazz, Class<TypeMapper> typeMapperClazz) throws PropertyVetoException, SQLException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException, IOException {
         super(argument, typePackageClazz, typeMapperClazz);
 
         this.callableStatement = this.getConnection().prepareCall("CALL public.\"" + getSqlEntity() + "@Save." + this.getArgument().getResolveStrategy() + "." + this.getArgument().getIdentityStrategy() + "\"(?, ?);");

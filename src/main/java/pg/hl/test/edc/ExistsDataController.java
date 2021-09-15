@@ -7,6 +7,7 @@ import pg.hl.test.IdentityStrategy;
 import pg.hl.test.TestUtils;
 
 import java.beans.PropertyVetoException;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.*;
@@ -28,7 +29,7 @@ public class ExistsDataController {
     @Getter
     private final DealsTypesExistsDataItem dealsTypes;
 
-    public static ExistsDataController getOrCreate(IdentityStrategy identityStrategy, EntityType entityType) throws SQLException, DevException, PropertyVetoException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    public static ExistsDataController getOrCreate(IdentityStrategy identityStrategy, EntityType entityType) throws SQLException, DevException, PropertyVetoException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException {
         var result = controllers.get(identityStrategy);
         if (result == null) {
             result = new ExistsDataController(identityStrategy, entityType);
@@ -37,7 +38,7 @@ public class ExistsDataController {
         return result;
     }
 
-    private ExistsDataController(IdentityStrategy identityStrategy, EntityType entityType) throws SQLException, DevException, PropertyVetoException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    private ExistsDataController(IdentityStrategy identityStrategy, EntityType entityType) throws SQLException, DevException, PropertyVetoException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException {
         this.identityStrategy = identityStrategy;
         this.entityType = entityType;
         var databaseHelper = TestUtils.createDatabaseHelper(identityStrategy, entityType);
@@ -50,7 +51,7 @@ public class ExistsDataController {
         }
     }
 
-    public void populateDeals(int dealsSize) throws SQLException, DevException, PropertyVetoException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    public void populateDeals(int dealsSize) throws SQLException, DevException, PropertyVetoException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException {
         if (dealsSize > existsDealsGUIds.size()) {
             existsDealsGUIds.clear();
             var databaseHelper = TestUtils.createDatabaseHelper(identityStrategy, entityType);

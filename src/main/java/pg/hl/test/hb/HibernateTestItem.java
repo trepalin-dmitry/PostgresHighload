@@ -3,6 +3,7 @@ package pg.hl.test.hb;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.exception.ConstraintViolationException;
+import pg.hl.DevException;
 import pg.hl.ExceptionsUtils;
 import pg.hl.dto.AbstractDataObject;
 import pg.hl.dto.AbstractDataPackage;
@@ -17,6 +18,7 @@ import pg.hl.test.hb.resolver.common.PersonResolver;
 
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.*;
@@ -38,7 +40,7 @@ public class HibernateTestItem<
     private final String exchangeDealHqlName;
     private final Class<TypeExchangeDealTarget> typeExchangeDealTargetClazz;
 
-    public HibernateTestItem(Class<TypePackage> typePackageClazz, Class<TypeExchangeDealTarget> typeExchangeDealTargetClazz, Class<TypeMapper> typeMapperClazz, CreateHibernateTestItemArgument argument) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    public HibernateTestItem(Class<TypePackage> typePackageClazz, Class<TypeExchangeDealTarget> typeExchangeDealTargetClazz, Class<TypeMapper> typeMapperClazz, CreateHibernateTestItemArgument argument) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException {
         super(argument.getParentArgument(), typePackageClazz);
         this.typeExchangeDealTargetClazz = typeExchangeDealTargetClazz;
         this.argument = argument;
@@ -60,7 +62,7 @@ public class HibernateTestItem<
         saveOrUpdate(mapper.parse(dealsPackage), argument.getCheckExistsStrategy());
     }
 
-    protected Session createSessionInternal() {
+    protected Session createSessionInternal() throws IOException {
         return SessionFactoryController.openSession(argument);
     }
 
@@ -142,6 +144,10 @@ public class HibernateTestItem<
                     for (Object o : query.getResultList()) {
                         TypeExchangeDealTarget exchangeDeal = cast(o);
                         existsMap.put(exchangeDeal.getGuid(), exchangeDeal.getId());
+                    }
+
+                    if (repeat && existsMap.size() == 0){
+                        throw new DevException("Значения е найдены!");
                     }
                 }
 

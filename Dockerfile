@@ -1,11 +1,4 @@
-FROM adoptopenjdk/openjdk11:jdk-11.0.11_9-alpine-slim as runner
-
-RUN mkdir -p /app && \
-  addgroup -S appgroup -g 1000 && \
-  adduser -S appuser -G appgroup -u 1000
-
-COPY target/*-exec.jar /app/app.jar
-
-USER appuser
-
-WORKDIR /app
+FROM adoptopenjdk:11-jre-hotspot
+RUN mkdir /opt/app
+COPY target/PostgresHighload-1.0-SNAPSHOT-jar-with-dependencies.jar /opt/app/japp.jar
+CMD ["java", "-jar", "/opt/app/japp.jar"]

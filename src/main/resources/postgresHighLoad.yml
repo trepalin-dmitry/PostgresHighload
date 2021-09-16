@@ -11,40 +11,40 @@ hibernate:
   showSql: false
 
 benchmark:
-  verboseMode: NORMAL # SILENT, NORMAL, EXTRA
-  forkWarmups: 0
+  verboseMode: SILENT # SILENT, NORMAL, EXTRA
+  forkWarmups: 1
   forkValue: 1
-  warmupIterations: 0
-  measurementIterations: 1
+  warmupIterations: 10
+  measurementIterations: 10
   testItemKinds:
     - StoredProcedureJson
     - StoredProcedureBulk
-#    - HibernateMinBefore
-#    - HibernateMinOnException
-#    - HibernateMaxBefore
-#    - HibernateMaxOnException
+    - HibernateMinBefore
+    - HibernateMinOnException
+    - HibernateMaxBefore
+    - HibernateMaxOnException
   connectionPoolTypes:
     - Hikari
-#    - C3p0
+    - C3p0
   entityTypes:
     - Simple
-#    - Multi
+    - Multi
   resolveStrategies:
     - Cache
-#    - Database
+    - Database
   identityStrategies:
     - Identity
-#    - SequenceOne
-#    - SequenceBatch
+    - SequenceOne
+    - SequenceBatch
   packageSizes:
     - 10
-#    - 100
-#    - 1000
-#    - 2000
+    - 100
+    - 1000
+    - 2000
   packagesSizesExists:
     - 0
-#    - 1
-#    - 10
+    - 1
+    - 10
 
 entities:
   exchangeDealsPersonsSize: 5

@@ -12,9 +12,7 @@ import org.hibernate.hikaricp.internal.HikariCPConnectionProvider;
 import org.postgresql.Driver;
 import pg.hl.config.Configuration;
 import pg.hl.test.ConnectionPoolType;
-import pg.hl.test.hb.common.ExchangeDealStatusType;
-import pg.hl.test.hb.common.ExchangeDealType;
-import pg.hl.test.hb.common.Person;
+import pg.hl.test.hb.common.*;
 import pg.hl.test.hb.entity.multi.identity.ExchangeDealIdentity;
 import pg.hl.test.hb.entity.multi.identity.ExchangeDealPersonIdentity;
 import pg.hl.test.hb.entity.multi.identity.ExchangeDealStatusIdentity;
@@ -80,6 +78,9 @@ public class SessionFactoryController {
         configuration.addAnnotatedClass(SimpleExchangeDealSequenceOne.class);
         configuration.addAnnotatedClass(SimpleExchangeDealSequenceBatch.class);
         configuration.addAnnotatedClass(SimpleExchangeDealIdentity.class);
+
+        configuration.addAnnotatedClass(Result.class);
+        configuration.addAnnotatedClass(ResultItem.class);
 
         switch (argument.getConnectionPoolType()) {
             case Hikari:

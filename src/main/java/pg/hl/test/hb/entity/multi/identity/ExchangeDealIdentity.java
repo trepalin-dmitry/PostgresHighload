@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.Accessors;
+import pg.hl.test.hb.EntitiesUtils;
 import pg.hl.test.hb.HibernateRootEntity;
 import pg.hl.test.hb.common.ExchangeDealType;
 
@@ -18,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.BiConsumer;
 
 @Entity
 @Getter
@@ -157,20 +157,13 @@ public class ExchangeDealIdentity implements HibernateRootEntity {
     private List<ExchangeDealStatusIdentity> exchangeDealStatuses = new ArrayList<>();
 
     public ExchangeDealIdentity addPersonsAll(Collection<ExchangeDealPersonIdentity> exchangeDealPersons) {
-        addAllInternal(exchangeDealPersons, this.exchangeDealPersons, ExchangeDealPersonIdentity::setExchangeDeal);
+        EntitiesUtils.addAll(this, exchangeDealPersons, this.exchangeDealPersons, ExchangeDealPersonIdentity::setExchangeDeal);
         return this;
     }
 
     public ExchangeDealIdentity addStatusesAll(Collection<ExchangeDealStatusIdentity> exchangeDealStatuses) {
-        addAllInternal(exchangeDealStatuses, this.exchangeDealStatuses, ExchangeDealStatusIdentity::setExchangeDeal);
+        EntitiesUtils.addAll(this, exchangeDealStatuses, this.exchangeDealStatuses, ExchangeDealStatusIdentity::setExchangeDeal);
         return this;
-    }
-
-    protected <T> void addAllInternal(Collection<T> from, Collection<T> to, BiConsumer<T, ExchangeDealIdentity> consumer) {
-        to.addAll(from);
-        for (T item : from) {
-            consumer.accept(item, this);
-        }
     }
 }
 

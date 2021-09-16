@@ -1,11 +1,11 @@
 package pg.hl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import org.openjdk.jmh.annotations.*;
-import org.openjdk.jmh.results.format.ResultFormatType;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
@@ -13,11 +13,13 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openjdk.jmh.runner.options.TimeValue;
 import pg.hl.config.Configuration;
 import pg.hl.test.*;
+import pg.hl.test.hb.SaveResultArgument;
 
 import java.beans.PropertyVetoException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
@@ -79,9 +81,7 @@ public class Main {
                 Options options = new OptionsBuilder()
                         .include(Main.class.getSimpleName())
 
-                        .resultFormat(ResultFormatType.CSV)
-                        .result(configuration.getBenchmark().getResultFilePath())
-
+                        .verbosity(configuration.getBenchmark().getVerboseMode())
                         .forks(configuration.getBenchmark().getForkValue())
                         .warmupForks(configuration.getBenchmark().getForkWarmups())
                         .warmupIterations(configuration.getBenchmark().getWarmupIterations())
@@ -89,16 +89,23 @@ public class Main {
                         .warmupTime(TimeValue.nanoseconds(1))
                         .measurementTime(TimeValue.nanoseconds(1))
 
-                        .param("testItemCode", toStringArray(configuration.getBenchmark().getTestItemKinds(), TestItemKind::name))
-                        .param("connectionPoolType", toStringArray(configuration.getBenchmark().getConnectionPoolTypes(), ConnectionPoolType::name))
-                        .param("entityType", toStringArray(configuration.getBenchmark().getEntityTypes(), EntityType::name))
-                        .param("resolveStrategy", toStringArray(configuration.getBenchmark().getResolveStrategies(), ResolveStrategy::name))
-                        .param("identityStrategy", toStringArray(configuration.getBenchmark().getIdentityStrategies(), IdentityStrategy::name))
-                        .param("packageSize", toStringArray(configuration.getBenchmark().getPackageSizes(), s -> Integer.toString(s)))
-                        .param("packageSizeExists", toStringArray(configuration.getBenchmark().getPackagesSizesExists(), s -> Integer.toString(s)))
+                        .param(BenchmarkParamsTypes.TEST_ITEM_KIND.getFieldName(), toStringArray(configuration.getBenchmark().getTestItemKinds(), TestItemKind::name))
+                        .param(BenchmarkParamsTypes.CONNECTION_POOL_TYPE.getFieldName(), toStringArray(configuration.getBenchmark().getConnectionPoolTypes(), ConnectionPoolType::name))
+                        .param(BenchmarkParamsTypes.ENTITY_TYPE.getFieldName(), toStringArray(configuration.getBenchmark().getEntityTypes(), EntityType::name))
+                        .param(BenchmarkParamsTypes.RESOLVE_STRATEGY.getFieldName(), toStringArray(configuration.getBenchmark().getResolveStrategies(), ResolveStrategy::name))
+                        .param(BenchmarkParamsTypes.IDENTITY_STRATEGY.getFieldName(), toStringArray(configuration.getBenchmark().getIdentityStrategies(), IdentityStrategy::name))
+                        .param(BenchmarkParamsTypes.PACKAGE_SIZE.getFieldName(), toStringArray(configuration.getBenchmark().getPackageSizes(), s -> Integer.toString(s)))
+                        .param(BenchmarkParamsTypes.PACKAGE_SIZE_EXISTS.getFieldName(), toStringArray(configuration.getBenchmark().getPackagesSizesExists(), s -> Integer.toString(s)))
 
                         .build();
-                new Runner(options).run();
+
+                var startDateTime = LocalDateTime.now();
+                var runResults = new Runner(options).run();
+                var finishDateTime = LocalDateTime.now();
+
+                TestUtils
+                        .createDatabaseHelper(IdentityStrategy.Identity, EntityType.Simple)
+                        .saveResult(new SaveResultArgument(startDateTime, finishDateTime, new ObjectMapper().writeValueAsString(configuration), runResults));
 
                 break;
             default:

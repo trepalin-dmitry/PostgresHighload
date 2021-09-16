@@ -3,15 +3,15 @@ package pg.hl.test.hb;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.exception.ConstraintViolationException;
+import org.openjdk.jmh.results.RunResult;
+import pg.hl.BenchmarkParamsTypes;
 import pg.hl.DevException;
 import pg.hl.ExceptionsUtils;
 import pg.hl.dto.AbstractDataObject;
 import pg.hl.dto.AbstractDataPackage;
 import pg.hl.test.AbstractTestItem;
 import pg.hl.test.DatabaseHelper;
-import pg.hl.test.hb.common.ExchangeDealStatusType;
-import pg.hl.test.hb.common.ExchangeDealType;
-import pg.hl.test.hb.common.Person;
+import pg.hl.test.hb.common.*;
 import pg.hl.test.hb.resolver.common.ExchangeDealStatusTypeResolver;
 import pg.hl.test.hb.resolver.common.ExchangeDealTypeResolver;
 import pg.hl.test.hb.resolver.common.PersonResolver;
@@ -146,7 +146,7 @@ public class HibernateTestItem<
                         existsMap.put(exchangeDeal.getGuid(), exchangeDeal.getId());
                     }
 
-                    if (repeat && existsMap.size() == 0){
+                    if (repeat && existsMap.size() == 0) {
                         throw new DevException("Значения е найдены!");
                     }
                 }
@@ -211,6 +211,45 @@ public class HibernateTestItem<
         session.close();
 
         super.close();
+    }
+
+    public void saveResult(SaveResultArgument saveResultArgument) {
+        sessionDoWithTransaction(session -> saveResult(session, saveResultArgument));
+    }
+
+    private void saveResult(Session session, SaveResultArgument saveResultArgument) {
+        var paramsTypesMap = Arrays
+                .stream(BenchmarkParamsTypes.values())
+                .collect(Collectors.toMap(BenchmarkParamsTypes::getFieldName, m -> m));
+
+        var resultItems = new ArrayList<ResultItem>();
+        for (RunResult runResult : saveResultArgument.getRunResults()) {
+            var item = new ResultItem()
+                    .setBenchmark(runResult.getParams().getBenchmark())
+                    .setMode(runResult.getParams().getMode())
+                    .setScore(runResult.getPrimaryResult().getScore())
+                    .setScoreError(runResult.getPrimaryResult().getScoreError())
+                    .setSampleCount(runResult.getPrimaryResult().getSampleCount());
+
+            for (String paramsKey : runResult.getParams().getParamsKeys()) {
+                var paramType = paramsTypesMap.get(paramsKey);
+                if (paramType == null) {
+                    throw new DevException("paramsKey = " + paramsKey);
+                }
+
+                paramType.setResultItemValue(item, runResult.getParams().getParam(paramsKey));
+            }
+
+            resultItems.add(item);
+        }
+
+        var result = new Result()
+                .setStartDateTime(saveResultArgument.getStartDateTime())
+                .setFinishDateTime(saveResultArgument.getFinishDateTime())
+                .setConfiguration(saveResultArgument.getConfiguration())
+                .addItemsAll(resultItems);
+
+        session.save(result);
     }
 }
 
